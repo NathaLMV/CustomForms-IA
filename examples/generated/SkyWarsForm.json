@@ -1,0 +1,95 @@
+{
+  "namespace": "server_form",
+  "main_screen_content": {
+    "modifications": [
+      {
+        "array_name": "controls",
+        "operation": "insert_back",
+        "value": [
+          {
+            "cf_skywars_factory": {
+              "type": "panel",
+              "factory": {
+                "name": "server_form_factory",
+                "control_ids": {
+                  "long_form": "@server_form.cf_skywars_panel"
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "cf_skywars_panel": {
+    "type": "panel",
+    "$marker": "JUGAR SKYWARS",
+    "bindings": [
+      {
+        "binding_name": "#title_text"
+      },
+      {
+        "binding_type": "view",
+        "source_property_name": "(not ((#title_text - $marker) = #title_text))",
+        "target_property_name": "#visible"
+      }
+    ],
+    "controls": [
+      {
+        "fondo_1@server_form.cf_skywars_fondo_1": {}
+      },
+      {
+        "banner_2@server_form.cf_skywars_banner_2": {}
+      },
+      {
+        "subtitulo_3@server_form.cf_skywars_subtitulo_3": {}
+      }
+    ]
+  },
+  "cf_skywars_fondo_1": {
+    "type": "image",
+    "texture": "textures/ui/skywars/background",
+    "size": [
+      "100%",
+      "100%"
+    ],
+    "anchor_from": "center",
+    "anchor_to": "center",
+    "offset": [
+      0,
+      0
+    ],
+    "layer": 1
+  },
+  "cf_skywars_banner_2": {
+    "type": "image",
+    "texture": "textures/ui/skywars/banner",
+    "size": [
+      300,
+      64
+    ],
+    "anchor_from": "top_middle",
+    "anchor_to": "top_middle",
+    "offset": [
+      0,
+      46
+    ],
+    "layer": 20
+  },
+  "cf_skywars_subtitulo_3": {
+    "type": "label",
+    "text": "§b¡Elige tu modo!",
+    "color": [
+      0.416,
+      0.827,
+      1
+    ],
+    "anchor_from": "top_middle",
+    "anchor_to": "top_middle",
+    "offset": [
+      0,
+      115
+    ],
+    "layer": 21
+  }
+}

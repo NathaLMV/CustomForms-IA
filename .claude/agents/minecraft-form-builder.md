@@ -177,6 +177,13 @@ Claves:
   el `size`/`offset` casi siempre necesitan ajuste fino dentro del juego.
 - Las texturas van sin extensión: `textures/ui/mi_banner`.
 
+### Generador visual
+
+El repo incluye `tools/jsonui-form-generator.html`: una página offline que exporta
+el `.json` de JSON-UI de un custom form (factory + binding por título, nombres únicos
+`cf_<id>_…`, soporta imágenes/fondo/labels). Úsalo o replícalo cuando el usuario
+quiera varios custom forms sin tocar el `server_form.json` original.
+
 ## Formato de entrega
 
 Cuando generes una solución completa entrega:

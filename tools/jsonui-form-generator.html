@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Generador JSON-UI · Custom Server Forms (Bedrock)</title>
+<style>
+  :root {
+    --bg: #14161c; --panel: #1e2129; --panel2: #262a34; --line: #353a47;
+    --txt: #e6e8ee; --muted: #9aa3b2; --accent: #6ad36a; --accent2: #d36ad3;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--txt);
+    font: 14px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 16px 20px; border-bottom: 1px solid var(--line);
+    background: linear-gradient(90deg,#1b1d24,#222530); }
+  header h1 { margin: 0; font-size: 18px; }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 20px; }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .card h2 { margin: 0 0 10px; font-size: 14px; color: var(--accent); }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
+  input, select { width: 100%; background: var(--panel2); color: var(--txt);
+    border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: inherit; }
+  input[type="checkbox"] { width: auto; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .chk { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .chk label { margin: 0; color: var(--txt); }
+  button { cursor: pointer; border: 0; border-radius: 7px; padding: 9px 14px;
+    font: inherit; font-weight: 600; }
+  .btn-primary { background: var(--accent); color: #06210a; }
+  .btn-2 { background: var(--accent2); color: #21062a; }
+  .btn-ghost { background: var(--panel2); color: var(--txt); border: 1px solid var(--line); }
+  .btn-danger { background: #3a2630; color: #ff9a9a; border: 1px solid #5a2f3f; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .el { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+    padding: 12px; margin-top: 10px; }
+  .el-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .el-head strong { font-size: 13px; }
+  pre { background: #0d0f14; border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px; overflow: auto; max-height: 560px; font-size: 12px; margin: 0;
+    white-space: pre; }
+  .hint { color: var(--muted); font-size: 11px; margin-top: 6px; }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Generador JSON-UI · Custom Server Forms (Bedrock)</h1>
+  <p>Diseña un formulario y exporta un <code>.json</code> de JSON-UI con la técnica de factory + binding por título.
+     Puedes tener varios forms a la vez sin modificar el <code>server_form.json</code> original.
+     Basado en <a style="color:var(--accent)" href="https://wiki.bedrock.dev/json-ui/modifying-server-forms" target="_blank">wiki.bedrock.dev</a>.</p>
+</header>
+
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2>1 · Datos del formulario</h2>
+      <label>Nombre / ID (slug, único por form)</label>
+      <input id="formId" value="skywars" placeholder="ej. skywars" />
+      <label>Marcador de título a detectar (#title_text contiene…)</label>
+      <input id="marker" value="JUGAR SKYWARS" placeholder="texto que el script pone en el título" />
+      <div class="hint">El banner/elementos solo aparecen cuando el título del form contiene este texto (subcadena, sin códigos §).</div>
+      <div class="chk">
+        <input type="checkbox" id="hideVanilla" />
+        <label for="hideVanilla">Ocultar el formulario original cuando coincida (reemplazo total en vez de overlay)</label>
+      </div>
+      <label>Nombre del archivo a descargar</label>
+      <input id="fileName" value="SkyWarsForm.json" />
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>2 · Elementos (añadir / quitar)</h2>
+      <div id="elements"></div>
+      <div class="toolbar">
+        <button class="btn-ghost" onclick="addEl('image')">+ Imagen</button>
+        <button class="btn-ghost" onclick="addEl('background')">+ Fondo (imagen 100%)</button>
+        <button class="btn-ghost" onclick="addEl('label')">+ Texto (label)</button>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>3 · Resultado JSON-UI</h2>
+      <div class="toolbar" style="margin-top:0;margin-bottom:10px">
+        <button class="btn-primary" onclick="download()">⬇ Descargar .json</button>
+        <button class="btn-2" onclick="copyJson()">⧉ Copiar</button>
+      </div>
+      <pre id="out"></pre>
+      <div class="hint">Coloca el archivo en <code>resource_pack/ui/</code> y regístralo en <code>ui/_ui_defs.json</code>.
+        JSON-UI es sensible a la versión: <code>size</code> y <code>offset</code> suelen necesitar ajuste fino en el juego.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ANCHORS = ["top_left","top_middle","top_right","left_middle","center","right_middle",
+                 "bottom_left","bottom_middle","bottom_right"];
+let elements = [];
+let uid = 0;
+
+function addEl(kind) {
+  uid++;
+  if (kind === "image" || kind === "background") {
+    elements.push({
+      id: uid, type: "image", name: (kind === "background" ? "fondo" : "imagen") + uid,
+      texture: "textures/ui/mi_textura",
+      fill: kind === "background",
+      w: 290, h: 84,
+      anchor_from: kind === "background" ? "center" : "top_middle",
+      anchor_to: kind === "background" ? "center" : "top_middle",
+      ox: 0, oy: kind === "background" ? 0 : 60,
+      layer: kind === "background" ? 1 : 20,
+    });
+  } else if (kind === "label") {
+    elements.push({
+      id: uid, type: "label", name: "texto" + uid,
+      text: "Mi texto §lpersonalizado",
+      color: "#ffffff",
+      anchor_from: "top_middle", anchor_to: "top_middle",
+      ox: 0, oy: 20, layer: 20,
+    });
+  }
+  render();
+}
+
+function removeEl(id) { elements = elements.filter(e => e.id !== id); render(); }
+
+function field(el, key, label, type) {
+  const v = el[key];
+  const val = type === "checkbox" ? (v ? "checked" : "") : `value="${String(v).replace(/"/g,'&quot;')}"`;
+  if (type === "select") {
+    const opts = ANCHORS.map(a => `<option ${a===v?"selected":""}>${a}</option>`).join("");
+    return `<label>${label}</label><select onchange="upd(${el.id},'${key}',this.value)">${opts}</select>`;
+  }
+  if (type === "checkbox") {
+    return `<div class="chk"><input type="checkbox" ${val} onchange="upd(${el.id},'${key}',this.checked)"><label>${label}</label></div>`;
+  }
+  const onkey = type === "number" ? `upd(${el.id},'${key}',Number(this.value))` : `upd(${el.id},'${key}',this.value)`;
+  return `<label>${label}</label><input type="${type||'text'}" ${val} oninput="${onkey}">`;
+}
+
+function upd(id, key, value) {
+  const el = elements.find(e => e.id === id);
+  if (!el) return;
+  el[key] = value;
+  if (key === "fill" || key === "type") render(); else generate();
+}
+
+function render() {
+  const c = document.getElementById("elements");
+  c.innerHTML = elements.map(el => {
+    let body = field(el, "name", "Nombre del control", "text") +
+               field(el, "anchor_from", "anchor_from", "select") +
+               field(el, "anchor_to", "anchor_to", "select") +
+               `<div class="row">${field(el,"ox","offset X","number")}${field(el,"oy","offset Y","number")}</div>` +
+               field(el, "layer", "layer (z-order)", "number");
+    if (el.type === "image") {
+      body = field(el, "texture", "Ruta de textura (sin extensión)", "text") +
+             field(el, "fill", "Ocupar todo el form (fondo 100%)", "checkbox") +
+             (el.fill ? "" : `<div class="row">${field(el,"w","ancho (px)","number")}${field(el,"h","alto (px)","number")}</div>`) +
+             body;
+    } else if (el.type === "label") {
+      body = field(el, "text", "Texto (admite §)", "text") +
+             field(el, "color", "Color", "color") + body;
+    }
+    return `<div class="el"><div class="el-head"><strong>${el.type === "image" ? "🖼 Imagen" : "🔤 Texto"} · #${el.id}</strong>
+      <button class="btn-danger" onclick="removeEl(${el.id})">Quitar</button></div>${body}</div>`;
+  }).join("");
+  ["formId","marker","hideVanilla","fileName"].forEach(id => {
+    const e = document.getElementById(id);
+    if (!e._bound) { e.addEventListener("input", generate); e._bound = true; }
+  });
+  generate();
+}
+
+function slug(s) { return (s || "form").toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "form"; }
+function hexToRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "#ffffff");
+  if (!m) return [1, 1, 1];
+  return [parseInt(m[1],16)/255, parseInt(m[2],16)/255, parseInt(m[3],16)/255].map(n => +n.toFixed(3));
+}
+
+function generate() {
+  const id = slug(document.getElementById("formId").value);
+  const marker = document.getElementById("marker").value;
+  const hideVanilla = document.getElementById("hideVanilla").checked;
+  const panelName = `cf_${id}_panel`;
+  const factoryName = `cf_${id}_factory`;
+
+  const out = { namespace: "server_form" };
+
+  out.main_screen_content = {
+    modifications: [
+      { array_name: "controls", operation: "insert_back", value: [
+        { [factoryName]: { type: "panel",
+          factory: { name: "server_form_factory",
+            control_ids: { long_form: `@server_form.${panelName}` } } } }
+      ] }
+    ]
+  };
+
+  const controls = [];
+  const defs = {};
+  elements.forEach((el, i) => {
+    const cname = slug(el.name) + "_" + el.id;
+    const defKey = `cf_${id}_${cname}`;
+    controls.push({ [`${cname}@server_form.${defKey}`]: {} });
+    if (el.type === "image") {
+      defs[defKey] = {
+        type: "image",
+        texture: el.texture,
+        size: el.fill ? ["100%", "100%"] : [Number(el.w), Number(el.h)],
+        anchor_from: el.anchor_from,
+        anchor_to: el.anchor_to,
+        offset: [Number(el.ox), Number(el.oy)],
+        layer: Number(el.layer),
+      };
+    } else {
+      defs[defKey] = {
+        type: "label",
+        text: el.text,
+        color: hexToRgb(el.color),
+        anchor_from: el.anchor_from,
+        anchor_to: el.anchor_to,
+        offset: [Number(el.ox), Number(el.oy)],
+        layer: Number(el.layer),
+      };
+    }
+  });
+
+  out[panelName] = {
+    type: "panel",
+    "$marker": marker,
+    bindings: [
+      { binding_name: "#title_text" },
+      { binding_type: "view",
+        source_property_name: "(not ((#title_text - $marker) = #title_text))",
+        target_property_name: "#visible" }
+    ],
+    controls,
+  };
+
+  Object.assign(out, defs);
+
+  if (hideVanilla) {
+    const safe = marker.replace(/'/g, "");
+    out.long_form = {
+      modifications: [
+        { array_name: "bindings", operation: "insert_back", value: [
+          { binding_name: "#title_text" },
+          { binding_type: "view",
+            source_property_name: `((#title_text - '${safe}') = #title_text)`,
+            target_property_name: "#visible" }
+        ] }
+      ]
+    };
+  }
+
+  document.getElementById("out").textContent = JSON.stringify(out, null, 2);
+}
+
+function download() {
+  const name = document.getElementById("fileName").value.trim() || "CustomForm.json";
+  const blob = new Blob([document.getElementById("out").textContent], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name.endsWith(".json") ? name : name + ".json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function copyJson() { navigator.clipboard.writeText(document.getElementById("out").textContent); }
+
+// estado inicial de ejemplo (SkyWars con un banner)
+addEl("image");
+</script>
+</body>
+</html>
