@@ -1,12 +1,14 @@
 import { world, system, ItemStack } from "@minecraft/server";
 import { showHiveMenu } from "./forms.js";
+import { showExampleForm } from "./example_custom_form.js";
 
 /**
  * Punto de entrada del Behavior Pack de ejemplo.
  *
- * Disparadores para abrir el menú principal:
+ * Disparadores:
  *   - Usar (clic derecho) una brújula  -> abre el menú Hive Games.
  *   - Escribir ".menu" en el chat        -> abre el menú Hive Games.
+ *   - Escribir ".form" en el chat        -> abre el custom form de ejemplo.
  */
 
 // Disparador 1: usar una brújula
@@ -17,12 +19,17 @@ world.afterEvents.itemUse.subscribe((event) => {
   system.run(() => showHiveMenu(player, system));
 });
 
-// Disparador 2: comando de chat ".menu"
+// Disparador 2: comandos de chat ".menu" y ".form"
 world.beforeEvents.chatSend.subscribe((event) => {
-  if (event.message.trim().toLowerCase() !== ".menu") return;
-  event.cancel = true;
+  const cmd = event.message.trim().toLowerCase();
   const player = event.sender;
-  system.run(() => showHiveMenu(player, system));
+  if (cmd === ".menu") {
+    event.cancel = true;
+    system.run(() => showHiveMenu(player, system));
+  } else if (cmd === ".form") {
+    event.cancel = true;
+    system.run(() => showExampleForm(player, system));
+  }
 });
 
 // Da una brújula al entrar para probar el menú rápidamente.
