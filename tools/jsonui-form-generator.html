@@ -402,6 +402,10 @@
     if (t.matches && t.matches("[data-f],[data-list]")) onField(t); });
 
   addForm();
+  // Confirma que el JavaScript se está ejecutando. Si la etiqueta de la cabecera
+  // sigue diciendo solo "build 5" (sin "JS OK"), tu visor NO ejecuta JS (p. ej. la
+  // previsualización de la app Archivos). Ábrelo en un navegador real.
+  const verEl = el("ver"); if (verEl) verEl.textContent = "build 5 · JS OK";
 })();
 </script>
 </body>
