@@ -54,7 +54,7 @@
 </head>
 <body>
 <header>
-  <h1>Generador de UIs personalizadas <span class="ver" id="ver">build 6</span></h1>
+  <h1>Generador de UIs personalizadas <span class="ver" id="ver">build 7</span></h1>
   <p>Crea cada UI en su archivo, el <code>server_form.json</code> con solo referencias + activación por flag, y el
      <code>_ui_defs.json</code>. Botones con icono/color, texto avanzado, paneles/degradados y scroll. Guarda tu proyecto.
      Ábrelo en un navegador (no en la previsualización de Archivos). 100% offline.</p>
@@ -140,7 +140,8 @@
   const cssOf = hex => { const c = hexToRgb(hex).map(n => Math.round(n * 255)); return `rgb(${c[0]},${c[1]},${c[2]})`; };
   function nextUid() { let mx = 0; forms.forEach(f => { mx = Math.max(mx, f.uid); (f.buttons || []).forEach(b => mx = Math.max(mx, b.id)); (f.elements || []).forEach(e => mx = Math.max(mx, e.id)); }); uid = Math.max(uid, mx); return ++uid; }
 
-  function newButton(text, color) { return { id: nextUid(), text: text || "Botón", icon: "", color: color || "#4f5666" }; }
+  const DEFAULT_BTN_COLOR = "#4f5666";
+  function newButton(text, color) { return { id: nextUid(), text: text || "Botón", icon: "", color: color || DEFAULT_BTN_COLOR, bgTexture: "", forceFlag: false }; }
   function defaultForm() {
     const fid = nextUid();
     return { uid: fid, id: "form" + fid, name: "SkyWars", flag: FLAG_POOL[0],
@@ -161,7 +162,7 @@
     if (field === "titleOn" || field === "descOn" || field === "btnOn") render(); else refresh(); }
   function addBtn() { const f = getActive(); if (!f) return; f.buttons.push(newButton("Nuevo botón")); render(); }
   function removeBtn(id) { const f = getActive(); if (!f) return; f.buttons = f.buttons.filter(b => b.id !== id); render(); }
-  function updBtn(id, key, value) { const f = getActive(); if (!f) return; const b = f.buttons.find(x => x.id === id); if (!b) return; b[key] = value; refresh(); }
+  function updBtn(id, key, value) { const f = getActive(); if (!f) return; const b = f.buttons.find(x => x.id === id); if (!b) return; b[key] = value; if (key === "forceFlag") render(); else refresh(); }
   function loadBtnIcon(id, input) { const f = getActive(); if (!f) return; const b = f.buttons.find(x => x.id === id);
     const file = input.files && input.files[0]; if (!b || !file) return; const r = new FileReader(); r.onload = () => { b._src = r.result; drawPreview(); }; r.readAsDataURL(file); }
 
@@ -184,7 +185,8 @@
   function inpF(key, value, type) { if (type === "checkbox") return `<input type="checkbox" data-f="${key}" ${value ? "checked" : ""}>`;
     return `<input type="${type || "text"}" data-f="${key}" data-type="${type || "text"}" value="${esc(value)}">`; }
   function selF(key, value, opts) { return `<select data-f="${key}">` + opts.map(o => `<option ${o === value ? "selected" : ""}>${o}</option>`).join("") + `</select>`; }
-  function inpB(id, key, value, type) { return `<input type="${type || "text"}" data-bt="${id}" data-key="${key}" value="${esc(value)}">`; }
+  function inpB(id, key, value, type) { if (type === "checkbox") return `<input type="checkbox" data-bt="${id}" data-key="${key}" ${value ? "checked" : ""}>`;
+    return `<input type="${type || "text"}" data-bt="${id}" data-key="${key}" data-type="${type || "text"}" value="${esc(value)}">`; }
   function inpE(id, key, value, type) { if (type === "checkbox") return `<input type="checkbox" data-elid="${id}" data-key="${key}" ${value ? "checked" : ""}>`;
     return `<input type="${type || "text"}" data-elid="${id}" data-key="${key}" data-type="${type || "text"}" value="${esc(value)}">`; }
   function selE(id, key, value, opts) { return `<select data-elid="${id}" data-key="${key}">` + opts.map(o => `<option ${o === value ? "selected" : ""}>${o}</option>`).join("") + `</select>`; }
@@ -225,12 +227,15 @@
     el("btnCard").innerHTML = `<h2>3 · Botones</h2>
       <div class="chk">${inpF("btnOn", f.btnOn, "checkbox")}<label>Mostrar botones</label></div>
       ${f.btnOn ? `<div class="row3"><div><label>Ancho</label>${inpF("btnWidth", f.btnWidth, "number")}</div><div><label>Alto</label>${inpF("btnHeight", f.btnHeight, "number")}</div><div><label>offset Y</label>${inpF("btnOffsetY", f.btnOffsetY, "number")}</div></div>` : ""}
-      ${f.buttons.map(b => `<div class="el"><div class="el-head"><strong>Botón</strong>
+      ${(() => { const bf = buttonFlags(f); return f.buttons.map((b, i) => `<div class="el"><div class="el-head"><strong>Botón</strong>
         <button class="btn-danger" data-act="removeBtn" data-arg2="${b.id}">✕</button></div>
         <div class="row"><div><label>Texto</label>${inpB(b.id, "text", b.text)}</div><div><label>Color</label>${inpB(b.id, "color", b.color, "color")}</div></div>
         <label>Icono (ruta de textura, opcional)</label>${inpB(b.id, "icon", b.icon)}
+        <label>Textura de fondo propia (opcional, nine-slice)</label>${inpB(b.id, "bgTexture", b.bgTexture || "")}
+        <div class="chk">${inpB(b.id, "forceFlag", b.forceFlag, "checkbox")}<label>Flag propio (personalización solo para este botón)</label></div>
+        <div class="hint">Flag: <span class="flagbox">${bf[i].needs ? bf[i].flag : "— (sin flag, estilo base)"}</span></div>
         <label>Icono local (solo previsualizar)</label><input type="file" accept="image/*" data-act="loadBtnIcon" data-bt="${b.id}">
-      </div>`).join("")}
+      </div>`).join(""); })()}
       <div class="toolbar"><button class="btn-ghost" data-act="addBtn">+ Botón</button></div>`;
 
     // elementos
@@ -268,10 +273,16 @@
   }
 
   /* ---- mapa color->subflag de botones (compartido por panel y script) ---- */
-  function colorFlags(f) {
-    const list = [];
-    f.buttons.forEach(b => { if (!list.find(c => c.hex === b.color)) list.push({ hex: b.color, flag: list.length === 0 ? "" : (FLAG_POOL[list.length - 1] || "") }); });
-    return list;
+  // Cada botón con personalización (color != base, textura propia o "flag propio")
+  // recibe un glifo invisible único; los demás usan el estilo base sin flag.
+  function buttonFlags(f) {
+    let i = 0;
+    return f.buttons.map(b => {
+      const needs = !!b.forceFlag || !!(b.bgTexture && b.bgTexture.trim()) || (String(b.color || "").toLowerCase() !== DEFAULT_BTN_COLOR);
+      if (!needs) return { needs: false, flag: "", glyphChar: "" };
+      const flag = FLAG_POOL[i] || FLAG_POOL[FLAG_POOL.length - 1]; i++;
+      return { needs: true, flag, glyphChar: flag.slice(-1) };
+    });
   }
 
   /* ---- construir la UI personalizada (archivo propio) ---- */
@@ -303,7 +314,7 @@
     }
 
     if (f.btnOn && f.buttons.length) {
-      const cf = colorFlags(f);
+      const bf = buttonFlags(f);
       out.buttons = { type: "stack_panel", orientation: "vertical", anchor_from: "top_middle", anchor_to: "top_middle",
         size: [num(f.btnWidth, 200), "100%c"], offset: [0, num(f.btnOffsetY, 78)], layer: 5,
         factory: { name: "button_list_factory", control_name: `${ns}.button` }, collection_name: "form_buttons",
@@ -312,15 +323,19 @@
         bindings: [{ binding_type: "collection_details", binding_collection_name: "form_buttons" }],
         controls: [ { [`default@${ns}.button_face`]: {} }, { [`hover@${ns}.button_face`]: {} }, { [`pressed@${ns}.button_face`]: {} } ] };
       const faceCtl = [];
-      // variante base (primer color, sin flag)
+      // variante base (sin flag): color por defecto
       faceCtl.push({ bg_base: { type: "custom", renderer: "gradient_renderer",
-        color1: hexToRgba(cf[0] ? cf[0].hex : "#4f5666", 1), color2: hexToRgba(cf[0] ? cf[0].hex : "#4f5666", 1), size: ["100%", "100%"], layer: 1 } });
-      // variantes por color (con flag)
-      cf.filter(c => c.flag).forEach((c, i) => {
-        faceCtl.push({ [`bg_${i}`]: { type: "custom", renderer: "gradient_renderer",
-          color1: hexToRgba(c.hex, 1), color2: hexToRgba(c.hex, 1), size: ["100%", "100%"], layer: 1,
-          bindings: [{ binding_type: "collection", binding_collection_name: "form_buttons", binding_name: "#form_button_text", binding_name_override: "#form_button_text" },
-            { binding_type: "view", source_property_name: `(not ((#form_button_text - '${c.flag}') = #form_button_text))`, target_property_name: "#visible" }] } });
+        color1: hexToRgba(DEFAULT_BTN_COLOR, 1), color2: hexToRgba(DEFAULT_BTN_COLOR, 1), size: ["100%", "100%"], layer: 1 } });
+      // una variante por botón con flag propio: textura propia o su color
+      f.buttons.forEach((b, i) => {
+        const fl = bf[i]; if (!fl.needs) return;
+        const vis = [{ binding_type: "collection", binding_collection_name: "form_buttons", binding_name: "#form_button_text", binding_name_override: "#form_button_text" },
+          { binding_type: "view", source_property_name: `(not ((#form_button_text - '${fl.flag}') = #form_button_text))`, target_property_name: "#visible" }];
+        const tex = (b.bgTexture || "").trim();
+        const variant = tex
+          ? { type: "image", texture: tex, nineslice_size: [4, 4, 4, 4], tiled: false, size: ["100%", "100%"], layer: 1, bindings: vis }
+          : { type: "custom", renderer: "gradient_renderer", color1: hexToRgba(b.color, 1), color2: hexToRgba(b.color, 1), size: ["100%", "100%"], layer: 1, bindings: vis };
+        faceCtl.push({ [`bg_${i}`]: variant });
       });
       // icono (si la textura no esta vacia)
       faceCtl.push({ icon: { type: "image", size: [num(f.btnHeight, 26) - 8, num(f.btnHeight, 26) - 8], anchor_from: "left_middle", anchor_to: "left_middle",
@@ -395,19 +410,16 @@
     let s = 'import { ActionFormData } from "@minecraft/server-ui";\n\n';
     s += '// Flag invisible que activa cada UI (va en el TÍTULO).\nconst FLAG = {\n';
     forms.forEach(f => { s += `  ${slug(f.id)}: "\\u00a7m\\u00a7${f.flag.slice(-1)}", // ${f.name} -> ${fileName(f)}\n`; });
-    s += '};\n// Sub-flags de color de botón (van en el TEXTO del botón).\n';
-    s += 'const COLOR = {\n';
-    forms.forEach(f => { colorFlags(f).filter(c => c.flag).forEach(c => { s += `  "${slug(f.id)}_${c.hex.replace('#','')}": "\\u00a7m\\u00a7${c.flag.slice(-1)}",\n`; }); });
     s += '};\n\n';
     forms.forEach(f => {
-      const id = slug(f.id), cf = colorFlags(f);
+      const id = slug(f.id), bf = buttonFlags(f);
       s += `// Abrir "${f.name}"\nexport async function open_${id}(player) {\n  const form = new ActionFormData()\n`;
       s += `    .title(${JSON.stringify(f.pvTitle || f.name)} + FLAG.${id})`;
       if (f.pvBody) s += `\n    .body(${JSON.stringify(f.pvBody)})`;
-      f.buttons.forEach(b => {
-        const c = cf.find(x => x.hex === b.color);
+      f.buttons.forEach((b, i) => {
+        const fl = bf[i];
         let t = JSON.stringify(b.text);
-        if (c && c.flag) t += ` + COLOR.${id}_${b.color.replace('#','')}`;
+        if (fl.needs) t += ` + "\\u00a7m\\u00a7${fl.glyphChar}"`;
         s += `\n    .button(${t}${b.icon ? `, ${JSON.stringify(b.icon)}` : ""})`;
       });
       s += `;\n\n  const r = await form.show(player);\n  if (r.canceled) return;\n  // r.selection -> índice del botón\n}\n\n`;
@@ -535,7 +547,7 @@
   try { const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
     if (Array.isArray(saved) && saved.length) { forms = saved; nextUid(); active = forms[0].uid; } } catch (e) {}
   if (!forms.length) addForm(); else { reflag(); render(); }
-  const verEl = el("ver"); if (verEl) verEl.textContent = "build 6 · JS OK";
+  const verEl = el("ver"); if (verEl) verEl.textContent = "build 7 · JS OK";
 })();
 </script>
 </body>
