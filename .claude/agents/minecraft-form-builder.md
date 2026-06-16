@@ -120,6 +120,63 @@ const [nombre, modo, volumen, sonido] = r.formValues;    // mismo orden de decla
 - Para abrir un menú: dispáralo desde un evento (`world.afterEvents.itemUse`,
   un `customCommand`, o interacción) — nunca desde el arranque global del script.
 
+## Banners de imagen con JSON-UI (Resource Pack)
+
+Los server forms de scripting **no** muestran imágenes de banner en el cuerpo.
+Para añadir banners/logos como en menús de servidores reales se usa **JSON-UI**
+en un **Resource Pack**, modificando `ui/server_form.json`.
+Referencia: https://wiki.bedrock.dev/json-ui/modifying-server-forms
+
+Técnica recomendada (overlay, no destructiva): registra una segunda *factory*
+`server_form_factory` que renderice solo el banner sobre el formulario, visible
+cuando el título contiene un texto concreto (string subtraction sobre `#title_text`):
+
+```jsonc
+// ui/_ui_defs.json
+{ "ui_defs": [ "ui/server_form.json" ] }
+```
+
+```jsonc
+// ui/server_form.json
+{
+  "namespace": "server_form",
+  "main_screen_content": {
+    "modifications": [
+      { "array_name": "controls", "operation": "insert_back", "value": [
+        { "mi_banner_factory": { "type": "panel",
+          "factory": { "name": "server_form_factory",
+            "control_ids": { "long_form": "@server_form.mi_banner_panel" } } } }
+      ] }
+    ]
+  },
+  "mi_banner_panel": { "type": "panel",
+    "controls": [ { "banner@server_form.mi_banner": {} } ] },
+  "mi_banner": {
+    "type": "image",
+    "texture": "textures/ui/mi_banner",
+    "size": [ 290, 84 ],
+    "anchor_from": "top_middle", "anchor_to": "top_middle",
+    "offset": [ 0, 60 ], "layer": 20,
+    "$marker": "TITULO A DETECTAR",
+    "bindings": [
+      { "binding_name": "#title_text" },
+      { "binding_type": "view",
+        "source_property_name": "(not ((#title_text - $marker) = #title_text))",
+        "target_property_name": "#visible" }
+    ]
+  }
+}
+```
+
+Claves:
+- El nombre de la factory **debe** ser `server_form_factory`; el panel sí puede tener nombre propio.
+- `(not ((#title_text - $marker) = #title_text))` es `true` cuando `$marker` está
+  contenido en el título → así muestras el banner solo en el formulario deseado.
+- Coincide por **subcadena de texto plano** (sin los códigos `§`) para que sea robusto.
+- JSON-UI es **sensible a la versión del juego** y no se puede testear fuera del cliente:
+  el `size`/`offset` casi siempre necesitan ajuste fino dentro del juego.
+- Las texturas van sin extensión: `textures/ui/mi_banner`.
+
 ## Formato de entrega
 
 Cuando generes una solución completa entrega:

@@ -10,8 +10,9 @@ Referencia oficial usada: https://wiki.bedrock.dev/scripting/server-forms
 
 | Ruta                                          | Qué es |
 | --------------------------------------------- | ------ |
-| `.claude/agents/minecraft-form-builder.md`    | El **agente** experto en generar formularios de Bedrock. |
+| `.claude/agents/minecraft-form-builder.md`    | El **agente** experto en generar formularios de Bedrock (incluye JSON-UI). |
 | `examples/hive-menu-bp/`                       | **Behavior Pack** de ejemplo, funcional, con los 3 menús de las imágenes. |
+| `examples/hive-menu-rp/`                       | **Resource Pack** (JSON-UI) que añade un **banner de imagen** al form de Murder Mystery. |
 
 ## Usar el agente
 
@@ -47,3 +48,26 @@ Instalación:
    escribe **`.menu`** en el chat para abrir el menú principal.
 
 Disparadores definidos en `scripts/main.js`: uso de brújula y comando de chat `.menu`.
+
+## Banner de imagen con JSON-UI (Resource Pack)
+
+Los server forms de scripting **no** admiten imágenes de banner en el cuerpo. Para
+lograrlas (como el cuadro promocional de la imagen de Murder Mystery) se usa
+**JSON-UI** en un Resource Pack. El ejemplo `examples/hive-menu-rp/`:
+
+- Registra una segunda *factory* `server_form_factory` que dibuja solo un banner
+  como overlay, **sin duplicar** el formulario.
+- El banner aparece únicamente cuando el título del form contiene
+  `MURDER MYSTERY PACKS` (coincidencia por subcadena sobre `#title_text`).
+- La textura está en `textures/ui/customforms/murder_mystery_banner.png`
+  (placeholder; **reemplázala por tu arte** manteniendo el nombre).
+
+Instalación:
+
+1. Copia `examples/hive-menu-rp/` a `development_resource_packs/`.
+2. Activa **ambos** packs en el mundo (el Behavior Pack y este Resource Pack).
+3. Abre el menú → SkyWars/Murder Mystery → "VER PACKS" y verás el banner.
+
+> JSON-UI es sensible a la versión del juego: `size` y `offset` del banner en
+> `ui/server_form.json` suelen necesitar ajuste fino dentro del cliente.
+> Referencia: https://wiki.bedrock.dev/json-ui/modifying-server-forms
