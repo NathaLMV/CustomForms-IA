@@ -16,45 +16,64 @@
     background: linear-gradient(90deg,#1b1d24,#222530); }
   header h1 { margin: 0; font-size: 18px; }
   header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 20px; }
-  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 20px; align-items: start; }
+  @media (max-width: 1000px) { .wrap { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
   .card h2 { margin: 0 0 10px; font-size: 14px; color: var(--accent); }
   label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
   input, select { width: 100%; background: var(--panel2); color: var(--txt);
     border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: inherit; }
   input[type="checkbox"] { width: auto; }
+  input[type="file"] { padding: 4px; font-size: 11px; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
   .chk { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
   .chk label { margin: 0; color: var(--txt); }
-  button { cursor: pointer; border: 0; border-radius: 7px; padding: 9px 14px;
-    font: inherit; font-weight: 600; }
+  button { cursor: pointer; border: 0; border-radius: 7px; padding: 9px 14px; font: inherit; font-weight: 600; }
   .btn-primary { background: var(--accent); color: #06210a; }
   .btn-2 { background: var(--accent2); color: #21062a; }
   .btn-ghost { background: var(--panel2); color: var(--txt); border: 1px solid var(--line); }
   .btn-danger { background: #3a2630; color: #ff9a9a; border: 1px solid #5a2f3f; }
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-  .el { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
-    padding: 12px; margin-top: 10px; }
+  .el { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-top: 10px; }
   .el-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
   .el-head strong { font-size: 13px; }
   pre { background: #0d0f14; border: 1px solid var(--line); border-radius: 8px;
-    padding: 14px; overflow: auto; max-height: 560px; font-size: 12px; margin: 0;
-    white-space: pre; }
+    padding: 14px; overflow: auto; max-height: 420px; font-size: 12px; margin: 0; white-space: pre; }
   .hint { color: var(--muted); font-size: 11px; margin-top: 6px; }
-  .hide { display: none !important; }
+
+  /* ---- Vista previa ---- */
+  #stage { position: relative; width: 100%; max-width: 460px; aspect-ratio: 16 / 11;
+    margin: 0 auto; border-radius: 8px; overflow: hidden;
+    background:
+      repeating-linear-gradient(45deg,#2a2233 0 18px,#2f2638 18px 36px);
+    border: 1px solid #000; box-shadow: 0 6px 24px rgba(0,0,0,.5); }
+  #formBox { position: absolute; inset: 8% 22%; background: rgba(18,18,22,.94);
+    border: 2px solid #0a0a0c; border-radius: 4px; overflow: hidden; }
+  #fTitle { color: #ffd84d; font-weight: 700; text-align: center; padding: 8px 6px 4px;
+    text-shadow: 1px 1px 0 #000; font-size: 13px; }
+  #fBody { color: #9fd0ff; text-align: center; padding: 0 10px 8px; font-size: 11px;
+    text-shadow: 1px 1px 0 #000; }
+  .fbtn { background: #4f5666; border: 2px solid #2c313c; color: #fff; text-align: center;
+    margin: 4px 10px; padding: 6px; border-radius: 2px; font-size: 11px; text-shadow: 1px 1px 0 #000; }
+  .ov { position: absolute; pointer-events: none; }
+  .ov-img { background-size: cover; background-position: center;
+    border: 1px dashed rgba(106,211,106,.7); display: flex; align-items: center; justify-content: center;
+    color: #6ad36a; font-size: 9px; text-align: center; overflow: hidden; }
+  .ov-img.has-src { border-style: solid; border-color: transparent; }
+  .ov-label { white-space: nowrap; text-shadow: 1px 1px 0 #000; font-size: 12px; }
+  .stage-note { text-align: center; color: var(--muted); font-size: 11px; margin-top: 6px; }
 </style>
 </head>
 <body>
 <header>
   <h1>Generador JSON-UI · Custom Server Forms (Bedrock)</h1>
-  <p>Diseña un formulario y exporta un <code>.json</code> de JSON-UI con la técnica de factory + binding por título.
-     Puedes tener varios forms a la vez sin modificar el <code>server_form.json</code> original.
+  <p>Diseña un formulario, <b>míralo en vivo</b> y exporta su <code>.json</code> de JSON-UI (factory + binding por título).
+     Varios forms sin tocar el <code>server_form.json</code> original.
      Basado en la técnica de <span style="color:var(--accent)">wiki.bedrock.dev/json-ui/modifying-server-forms</span>.</p>
 </header>
 
 <div class="wrap">
+  <!-- Columna de configuración -->
   <div>
     <div class="card">
       <h2>1 · Datos del formulario</h2>
@@ -62,17 +81,29 @@
       <input id="formId" value="skywars" placeholder="ej. skywars" />
       <label>Marcador de título a detectar (#title_text contiene…)</label>
       <input id="marker" value="JUGAR SKYWARS" placeholder="texto que el script pone en el título" />
-      <div class="hint">El banner/elementos solo aparecen cuando el título del form contiene este texto (subcadena, sin códigos §).</div>
+      <div class="hint">Los elementos solo aparecen cuando el título del form contiene este texto (subcadena, sin códigos §).</div>
       <div class="chk">
         <input type="checkbox" id="hideVanilla" />
-        <label for="hideVanilla">Ocultar el formulario original cuando coincida (reemplazo total en vez de overlay)</label>
+        <label for="hideVanilla">Ocultar el formulario original cuando coincida (reemplazo total)</label>
       </div>
       <label>Nombre del archivo a descargar</label>
       <input id="fileName" value="SkyWarsForm.json" />
     </div>
 
-    <div class="card" style="margin-top:16px">
-      <h2>2 · Elementos (añadir / quitar)</h2>
+    <div class="card">
+      <h2>2 · Vista previa del form base (solo para previsualizar)</h2>
+      <label>Título</label>
+      <input id="pvTitle" value="JUGAR SKYWARS" />
+      <label>Comentario / cuerpo</label>
+      <input id="pvBody" value="¡Elige tu modo de juego!" />
+      <label>Botones (separados por coma)</label>
+      <input id="pvButtons" value="Solitario, Dúos, Escuadrones, MEGA LTM" />
+      <div class="chk"><input type="checkbox" id="pvShowBase" checked><label>Mostrar formulario base bajo los elementos</label></div>
+      <div class="hint">Estos textos no se exportan: vienen de tu script (.title/.body/.button). Solo sirven para ver el conjunto.</div>
+    </div>
+
+    <div class="card">
+      <h2>3 · Elementos (añadir / quitar)</h2>
       <div id="elements"></div>
       <div class="toolbar">
         <button class="btn-ghost" onclick="addEl('image')">+ Imagen</button>
@@ -82,16 +113,23 @@
     </div>
   </div>
 
+  <!-- Columna de vista previa + JSON -->
   <div>
     <div class="card">
-      <h2>3 · Resultado JSON-UI</h2>
+      <h2>Vista previa</h2>
+      <div id="stage"></div>
+      <div class="stage-note">Aproximación. Las imágenes se ven si cargas una local en el elemento; si no, aparece su ruta como marcador.</div>
+    </div>
+
+    <div class="card">
+      <h2>Resultado JSON-UI</h2>
       <div class="toolbar" style="margin-top:0;margin-bottom:10px">
         <button class="btn-primary" onclick="download()">⬇ Descargar .json</button>
         <button class="btn-2" onclick="copyJson()">⧉ Copiar</button>
       </div>
       <pre id="out"></pre>
       <div class="hint">Coloca el archivo en <code>resource_pack/ui/</code> y regístralo en <code>ui/_ui_defs.json</code>.
-        JSON-UI es sensible a la versión: <code>size</code> y <code>offset</code> suelen necesitar ajuste fino en el juego.</div>
+        JSON-UI es sensible a la versión: <code>size</code>/<code>offset</code> suelen necesitar ajuste fino en el juego.</div>
     </div>
   </div>
 </div>
@@ -108,20 +146,17 @@ function addEl(kind) {
     elements.push({
       id: uid, type: "image", name: (kind === "background" ? "fondo" : "imagen") + uid,
       texture: "textures/ui/mi_textura",
-      fill: kind === "background",
-      w: 290, h: 84,
+      fill: kind === "background", w: 290, h: 84,
       anchor_from: kind === "background" ? "center" : "top_middle",
       anchor_to: kind === "background" ? "center" : "top_middle",
-      ox: 0, oy: kind === "background" ? 0 : 60,
-      layer: kind === "background" ? 1 : 20,
+      ox: 0, oy: kind === "background" ? 0 : 30,
+      layer: kind === "background" ? 1 : 20, _src: null,
     });
-  } else if (kind === "label") {
+  } else {
     elements.push({
-      id: uid, type: "label", name: "texto" + uid,
-      text: "Mi texto §lpersonalizado",
-      color: "#ffffff",
-      anchor_from: "top_middle", anchor_to: "top_middle",
-      ox: 0, oy: 20, layer: 20,
+      id: uid, type: "label", name: "texto" + uid, text: "Mi texto §lpersonalizado",
+      color: "#ffffff", anchor_from: "top_middle", anchor_to: "top_middle",
+      ox: 0, oy: 14, layer: 20,
     });
   }
   render();
@@ -136,9 +171,8 @@ function field(el, key, label, type) {
     const opts = ANCHORS.map(a => `<option ${a===v?"selected":""}>${a}</option>`).join("");
     return `<label>${label}</label><select onchange="upd(${el.id},'${key}',this.value)">${opts}</select>`;
   }
-  if (type === "checkbox") {
+  if (type === "checkbox")
     return `<div class="chk"><input type="checkbox" ${val} onchange="upd(${el.id},'${key}',this.checked)"><label>${label}</label></div>`;
-  }
   const onkey = type === "number" ? `upd(${el.id},'${key}',Number(this.value))` : `upd(${el.id},'${key}',this.value)`;
   return `<label>${label}</label><input type="${type||'text'}" ${val} oninput="${onkey}">`;
 }
@@ -147,7 +181,16 @@ function upd(id, key, value) {
   const el = elements.find(e => e.id === id);
   if (!el) return;
   el[key] = value;
-  if (key === "fill" || key === "type") render(); else generate();
+  if (key === "fill" || key === "type") render(); else { generate(); drawPreview(); }
+}
+
+function loadImg(id, input) {
+  const el = elements.find(e => e.id === id);
+  const f = input.files && input.files[0];
+  if (!el || !f) return;
+  const r = new FileReader();
+  r.onload = () => { el._src = r.result; drawPreview(); };
+  r.readAsDataURL(f);
 }
 
 function render() {
@@ -162,19 +205,21 @@ function render() {
       body = field(el, "texture", "Ruta de textura (sin extensión)", "text") +
              field(el, "fill", "Ocupar todo el form (fondo 100%)", "checkbox") +
              (el.fill ? "" : `<div class="row">${field(el,"w","ancho (px)","number")}${field(el,"h","alto (px)","number")}</div>`) +
-             body;
-    } else if (el.type === "label") {
+             body +
+             `<label>Imagen local para previsualizar (no se exporta)</label>
+              <input type="file" accept="image/*" onchange="loadImg(${el.id}, this)">`;
+    } else {
       body = field(el, "text", "Texto (admite §)", "text") +
              field(el, "color", "Color", "color") + body;
     }
-    return `<div class="el"><div class="el-head"><strong>${el.type === "image" ? "🖼 Imagen" : "🔤 Texto"} · #${el.id}</strong>
+    return `<div class="el"><div class="el-head"><strong>${el.type === "image" ? "🖼 Imagen" : "🔤 Texto"} · ${el.name}</strong>
       <button class="btn-danger" onclick="removeEl(${el.id})">Quitar</button></div>${body}</div>`;
   }).join("");
-  ["formId","marker","hideVanilla","fileName"].forEach(id => {
+  ["formId","marker","hideVanilla","fileName","pvTitle","pvBody","pvButtons","pvShowBase"].forEach(id => {
     const e = document.getElementById(id);
-    if (!e._bound) { e.addEventListener("input", generate); e._bound = true; }
+    if (e && !e._bound) { e.addEventListener("input", () => { generate(); drawPreview(); }); e._bound = true; }
   });
-  generate();
+  generate(); drawPreview();
 }
 
 function slug(s) { return (s || "form").toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "form"; }
@@ -183,99 +228,129 @@ function hexToRgb(hex) {
   if (!m) return [1, 1, 1];
   return [parseInt(m[1],16)/255, parseInt(m[2],16)/255, parseInt(m[3],16)/255].map(n => +n.toFixed(3));
 }
+// quita códigos § para mostrar texto limpio en el preview
+function clean(t) { return String(t || "").replace(/§./g, ""); }
 
 function generate() {
   const id = slug(document.getElementById("formId").value);
   const marker = document.getElementById("marker").value;
   const hideVanilla = document.getElementById("hideVanilla").checked;
-  const panelName = `cf_${id}_panel`;
-  const factoryName = `cf_${id}_factory`;
-
+  const panelName = `cf_${id}_panel`, factoryName = `cf_${id}_factory`;
   const out = { namespace: "server_form" };
 
-  out.main_screen_content = {
-    modifications: [
-      { array_name: "controls", operation: "insert_back", value: [
-        { [factoryName]: { type: "panel",
-          factory: { name: "server_form_factory",
-            control_ids: { long_form: `@server_form.${panelName}` } } } }
-      ] }
-    ]
-  };
+  out.main_screen_content = { modifications: [
+    { array_name: "controls", operation: "insert_back", value: [
+      { [factoryName]: { type: "panel", factory: { name: "server_form_factory",
+        control_ids: { long_form: `@server_form.${panelName}` } } } }
+    ] }
+  ] };
 
-  const controls = [];
-  const defs = {};
-  elements.forEach((el, i) => {
-    const cname = slug(el.name) + "_" + el.id;
-    const defKey = `cf_${id}_${cname}`;
+  const controls = [], defs = {};
+  elements.forEach(el => {
+    const cname = slug(el.name) + "_" + el.id, defKey = `cf_${id}_${cname}`;
     controls.push({ [`${cname}@server_form.${defKey}`]: {} });
     if (el.type === "image") {
-      defs[defKey] = {
-        type: "image",
-        texture: el.texture,
+      defs[defKey] = { type: "image", texture: el.texture,
         size: el.fill ? ["100%", "100%"] : [Number(el.w), Number(el.h)],
-        anchor_from: el.anchor_from,
-        anchor_to: el.anchor_to,
-        offset: [Number(el.ox), Number(el.oy)],
-        layer: Number(el.layer),
-      };
+        anchor_from: el.anchor_from, anchor_to: el.anchor_to,
+        offset: [Number(el.ox), Number(el.oy)], layer: Number(el.layer) };
     } else {
-      defs[defKey] = {
-        type: "label",
-        text: el.text,
-        color: hexToRgb(el.color),
-        anchor_from: el.anchor_from,
-        anchor_to: el.anchor_to,
-        offset: [Number(el.ox), Number(el.oy)],
-        layer: Number(el.layer),
-      };
+      defs[defKey] = { type: "label", text: el.text, color: hexToRgb(el.color),
+        anchor_from: el.anchor_from, anchor_to: el.anchor_to,
+        offset: [Number(el.ox), Number(el.oy)], layer: Number(el.layer) };
     }
   });
 
-  out[panelName] = {
-    type: "panel",
-    "$marker": marker,
-    bindings: [
-      { binding_name: "#title_text" },
-      { binding_type: "view",
-        source_property_name: "(not ((#title_text - $marker) = #title_text))",
-        target_property_name: "#visible" }
-    ],
-    controls,
-  };
-
+  out[panelName] = { type: "panel", "$marker": marker,
+    bindings: [ { binding_name: "#title_text" },
+      { binding_type: "view", source_property_name: "(not ((#title_text - $marker) = #title_text))",
+        target_property_name: "#visible" } ],
+    controls };
   Object.assign(out, defs);
 
   if (hideVanilla) {
     const safe = marker.replace(/'/g, "");
-    out.long_form = {
-      modifications: [
-        { array_name: "bindings", operation: "insert_back", value: [
-          { binding_name: "#title_text" },
-          { binding_type: "view",
-            source_property_name: `((#title_text - '${safe}') = #title_text)`,
-            target_property_name: "#visible" }
-        ] }
-      ]
-    };
+    out.long_form = { modifications: [
+      { array_name: "bindings", operation: "insert_back", value: [
+        { binding_name: "#title_text" },
+        { binding_type: "view", source_property_name: `((#title_text - '${safe}') = #title_text)`,
+          target_property_name: "#visible" } ] } ] };
   }
-
   document.getElementById("out").textContent = JSON.stringify(out, null, 2);
 }
 
+// Convierte un anchor en porcentajes [x,y] (0=izq/arriba, .5=medio, 1=der/abajo)
+function anchorPct(a) {
+  const x = a.includes("left") ? 0 : a.includes("right") ? 1 : 0.5;
+  const y = a.includes("top") ? 0 : a.includes("bottom") ? 1 : 0.5;
+  return [x, y];
+}
+
+function drawPreview() {
+  const stage = document.getElementById("stage");
+  const showBase = document.getElementById("pvShowBase").checked;
+  const hideVanilla = document.getElementById("hideVanilla").checked;
+  stage.innerHTML = "";
+
+  // formulario base
+  const box = document.createElement("div");
+  box.id = "formBox";
+  if (showBase && !hideVanilla) {
+    const t = document.createElement("div"); t.id = "fTitle";
+    t.textContent = clean(document.getElementById("pvTitle").value) || "TÍTULO";
+    const b = document.createElement("div"); b.id = "fBody";
+    b.textContent = clean(document.getElementById("pvBody").value);
+    box.appendChild(t); box.appendChild(b);
+    (document.getElementById("pvButtons").value.split(",")).forEach(s => {
+      const txt = clean(s).trim(); if (!txt) return;
+      const d = document.createElement("div"); d.className = "fbtn"; d.textContent = txt; box.appendChild(d);
+    });
+  } else {
+    box.style.background = "rgba(18,18,22,.55)";
+    const n = document.createElement("div"); n.id = "fBody";
+    n.style.paddingTop = "14px"; n.textContent = "(form base oculto)"; box.appendChild(n);
+  }
+  stage.appendChild(box);
+
+  // elementos overlay (relativos al formBox), ordenados por layer
+  const sorted = [...elements].sort((a, b) => (a.layer || 0) - (b.layer || 0));
+  sorted.forEach(el => {
+    const d = document.createElement("div");
+    d.style.zIndex = String(el.layer || 0);
+    const [ax, ay] = anchorPct(el.anchor_to);
+    const [fx, fy] = anchorPct(el.anchor_from);
+    d.style.position = "absolute";
+    d.style.left = (ax * 100) + "%";
+    d.style.top = (ay * 100) + "%";
+    d.style.transform = `translate(calc(-${fx * 100}% + ${Number(el.ox)}px), calc(-${fy * 100}% + ${Number(el.oy)}px))`;
+
+    if (el.type === "image") {
+      d.className = "ov ov-img" + (el._src ? " has-src" : "");
+      if (el.fill) { d.style.left = "0"; d.style.top = "0"; d.style.transform = "none"; d.style.width = "100%"; d.style.height = "100%"; }
+      else { d.style.width = Number(el.w) + "px"; d.style.height = Number(el.h) + "px"; }
+      if (el._src) d.style.backgroundImage = `url(${el._src})`;
+      else d.textContent = el.texture;
+    } else {
+      d.className = "ov ov-label";
+      d.textContent = clean(el.text);
+      const c = hexToRgb(el.color).map(n => Math.round(n * 255));
+      d.style.color = `rgb(${c[0]},${c[1]},${c[2]})`;
+    }
+    box.appendChild(d);
+  });
+}
+
 function download() {
-  const name = document.getElementById("fileName").value.trim() || "CustomForm.json";
+  const name = (document.getElementById("fileName").value.trim() || "CustomForm.json");
   const blob = new Blob([document.getElementById("out").textContent], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = name.endsWith(".json") ? name : name + ".json";
-  a.click();
-  URL.revokeObjectURL(a.href);
+  a.click(); URL.revokeObjectURL(a.href);
 }
-
 function copyJson() { navigator.clipboard.writeText(document.getElementById("out").textContent); }
 
-// estado inicial de ejemplo (SkyWars con un banner)
+// estado inicial de ejemplo
 addEl("image");
 </script>
 </body>
