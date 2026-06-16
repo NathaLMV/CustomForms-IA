@@ -54,7 +54,7 @@
 </head>
 <body>
 <header>
-  <h1>Generador de UIs personalizadas <span class="ver" id="ver">build 8</span></h1>
+  <h1>Generador de UIs personalizadas <span class="ver" id="ver">build 9</span></h1>
   <p>Crea cada UI en su archivo, el <code>server_form.json</code> con solo referencias + activación por flag, y el
      <code>_ui_defs.json</code>. Botones con icono/color, texto avanzado, paneles/degradados y scroll. Guarda tu proyecto.
      Ábrelo en un navegador (no en la previsualización de Archivos). 100% offline.</p>
@@ -176,15 +176,15 @@
   function addEl(type) {
     const f = getActive(); if (!f) return; const id = nextUid();
     const base = { id, anchor_from: "top_middle", anchor_to: "top_middle", ox: 0, oy: 120, layer: 15 };
-    if (type === "image") f.elements.push(Object.assign(base, { type, name: "img" + id, texture: "textures/ui/mi_textura", fill: false, w: 280, h: 70, _src: null }));
-    else if (type === "bg") f.elements.push(Object.assign(base, { type: "image", name: "fondo" + id, texture: "textures/ui/fondo", fill: true, w: 280, h: 70, oy: 0, layer: 1, _src: null }));
+    if (type === "image") f.elements.push(Object.assign(base, { type, name: "img" + id, texture: "textures/ui/mi_textura", fill: false, w: 280, h: 70, alpha: 1, tint: false, color: "#ffffff", nineslice: false, nsl: 4, _src: null }));
+    else if (type === "bg") f.elements.push(Object.assign(base, { type: "image", name: "fondo" + id, texture: "textures/ui/fondo", fill: true, w: 280, h: 70, oy: 0, layer: 1, alpha: 1, tint: false, color: "#ffffff", nineslice: false, nsl: 4, _src: null }));
     else if (type === "gradient") f.elements.push(Object.assign(base, { type, name: "panel" + id, color1: "#101018", color2: "#3a0a3f", alpha: 0.85, fill: true, w: 280, h: 120, oy: 0, layer: 1 }));
     else if (type === "label") f.elements.push(Object.assign(base, { type, name: "texto" + id, text: "Mi texto", color: "#ffffff", font: "default", align: "center", shadow: true, scale: 1 }));
     else if (type === "scroll") f.elements.push(Object.assign(base, { type, name: "scroll" + id, text: "#form_text", color: "#5cc0ff", font: "default", align: "left", w: 200, h: 80, layer: 6 }));
     render();
   }
   function removeEl(id) { const f = getActive(); if (!f) return; f.elements = f.elements.filter(e => e.id !== id); render(); }
-  function updEl(id, key, value) { const f = getActive(); if (!f) return; const e = f.elements.find(x => x.id === id); if (!e) return; e[key] = value; if (key === "fill") render(); else refresh(); }
+  function updEl(id, key, value) { const f = getActive(); if (!f) return; const e = f.elements.find(x => x.id === id); if (!e) return; e[key] = value; if (key === "fill" || key === "tint" || key === "nineslice") render(); else refresh(); }
   function loadElImg(id, input) { const f = getActive(); if (!f) return; const e = f.elements.find(x => x.id === id);
     const file = input.files && input.files[0]; if (!e || !file) return; const r = new FileReader(); r.onload = () => { e._src = r.result; drawPreview(); }; r.readAsDataURL(file); }
 
@@ -261,6 +261,10 @@
       if (e.type === "image") body = `<label>Ruta de textura</label>${inpE(e.id, "texture", e.texture)}
         <div class="chk">${inpE(e.id, "fill", e.fill, "checkbox")}<label>Ocupar todo (fondo)</label></div>
         ${e.fill ? "" : `<div class="row"><div><label>ancho</label>${inpE(e.id, "w", e.w, "number")}</div><div><label>alto</label>${inpE(e.id, "h", e.h, "number")}</div></div>`}
+        <div class="row"><div><label>Opacidad (0-1)</label>${inpE(e.id, "alpha", e.alpha != null ? e.alpha : 1, "number")}</div><div><div class="chk">${inpE(e.id, "tint", e.tint, "checkbox")}<label>Tintar de color</label></div></div></div>
+        ${e.tint ? `<label>Color del tinte</label>${inpE(e.id, "color", e.color || "#ffffff", "color")}` : ""}
+        <div class="chk">${inpE(e.id, "nineslice", e.nineslice, "checkbox")}<label>Nine-slice (borde que no se estira)</label></div>
+        ${e.nineslice ? `<label>nineslice_size</label>${inpE(e.id, "nsl", e.nsl != null ? e.nsl : 4, "number")}<div class="hint">Si el PNG ya trae su <code>.json</code> de nineslice (como las texturas de Hive), no hace falta.</div>` : ""}
         ${anchorBlock(e.id, e)}<label>Imagen local (previsualizar)</label><input type="file" accept="image/*" data-act="loadElImg" data-elid="${e.id}">`;
       else if (e.type === "gradient") body = `<div class="row"><div><label>Color 1</label>${inpE(e.id, "color1", e.color1, "color")}</div><div><label>Color 2</label>${inpE(e.id, "color2", e.color2, "color")}</div></div>
         <label>Opacidad (0-1)</label>${inpE(e.id, "alpha", e.alpha, "number")}
@@ -375,6 +379,9 @@
       if (e.type === "image") {
         out[cn] = { type: "image", texture: e.texture, size: e.fill ? ["100%", "100%"] : [num(e.w, 100), num(e.h, 40)],
           anchor_from: e.anchor_from, anchor_to: e.anchor_to, offset: [num(e.ox, 0), num(e.oy, 0)], layer: num(e.layer, 1), keep_ratio: false };
+        if (e.alpha != null && num(e.alpha, 1) !== 1) out[cn].alpha = num(e.alpha, 1);
+        if (e.tint) out[cn].color = hexToRgba(e.color || "#ffffff", 1).slice(0, 3);
+        if (e.nineslice) { out[cn].nineslice_size = num(e.nsl, 4); out[cn].tiled = false; }
         ctrls.push({ [`${cn}@${ns}.${cn}`]: {} });
       } else if (e.type === "gradient") {
         out[cn] = { type: "custom", renderer: "gradient_renderer", color1: hexToRgba(e.color1, e.alpha), color2: hexToRgba(e.color2, e.alpha),
@@ -494,7 +501,9 @@
       const d = document.createElement("div");
       if (e.type === "image") { d.className = "ov ov-img" + (e._src ? " has-src" : "");
         if (e.fill) { d.style.position = "absolute"; d.style.inset = "0"; d.style.zIndex = String(num(e.layer, 0)); } else { placeStyle(d, e); d.style.width = num(e.w, 100) + "px"; d.style.height = num(e.h, 40) + "px"; }
-        if (e._src) d.style.backgroundImage = `url(${e._src})`; else d.textContent = e.texture; }
+        d.style.opacity = String(num(e.alpha, 1));
+        if (e._src) { d.style.backgroundImage = `url(${e._src})`; if (e.tint) { d.style.backgroundColor = cssOf(e.color); d.style.backgroundBlendMode = "multiply"; } }
+        else { d.textContent = e.texture; if (e.tint) { d.style.background = cssOf(e.color); d.style.color = "#000"; } } }
       else if (e.type === "gradient") { d.className = "ov";
         if (e.fill) { d.style.position = "absolute"; d.style.inset = "0"; d.style.zIndex = String(num(e.layer, 0)); } else { placeStyle(d, e); d.style.width = num(e.w, 100) + "px"; d.style.height = num(e.h, 40) + "px"; }
         d.style.background = `linear-gradient(${cssOf(e.color1)}, ${cssOf(e.color2)})`; d.style.opacity = String(num(e.alpha, 1)); }
@@ -590,7 +599,7 @@
   try { const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
     if (Array.isArray(saved) && saved.length) { forms = saved; nextUid(); active = forms[0].uid; } } catch (e) {}
   if (!forms.length) addForm(); else { reflag(); render(); }
-  const verEl = el("ver"); if (verEl) verEl.textContent = "build 8 · JS OK";
+  const verEl = el("ver"); if (verEl) verEl.textContent = "build 9 · JS OK";
 })();
 </script>
 </body>
