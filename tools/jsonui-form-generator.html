@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Compositor de forms estilo The Hive (Bedrock)</title>
+<title>Generador de UIs personalizadas (Bedrock, estructura Hive)</title>
 <style>
   :root { --bg:#14161c; --panel:#1e2129; --panel2:#262a34; --line:#353a47;
     --txt:#e6e8ee; --muted:#9aa3b2; --accent:#6ad36a; --accent2:#d36ad3; --gold:#eed20a; }
@@ -11,97 +11,99 @@
   body { margin:0; background:var(--bg); color:var(--txt); font:14px/1.5 system-ui,"Segoe UI",Roboto,sans-serif; }
   header { padding:14px 20px; border-bottom:1px solid var(--line); background:linear-gradient(90deg,#1b1d24,#222530); }
   header h1 { margin:0; font-size:17px; } header p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+  .ver { display:inline-block; margin-left:8px; padding:1px 7px; border-radius:10px; background:var(--accent); color:#06210a; font-size:11px; font-weight:700; vertical-align:middle; }
   .wrap { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:16px 20px; align-items:start; }
   @media (max-width:1050px){ .wrap{ grid-template-columns:1fr; } }
   .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:16px; }
   .card h2 { margin:0 0 10px; font-size:14px; color:var(--accent); }
+  .card h3 { margin:12px 0 4px; font-size:12px; color:var(--gold); }
   label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
   input, select { width:100%; background:var(--panel2); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:7px 9px; font:inherit; }
+  input[type=checkbox]{ width:auto; } input[type=file]{ padding:4px; font-size:11px; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .row3 { display:grid; grid-template-columns:2fr 1fr auto; gap:8px; align-items:end; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .chk { display:flex; align-items:center; gap:8px; margin-top:10px; } .chk label { margin:0; color:var(--txt); }
   button { cursor:pointer; border:0; border-radius:7px; padding:8px 13px; font:inherit; font-weight:600; }
   .btn-primary{ background:var(--accent); color:#06210a; } .btn-2{ background:var(--accent2); color:#21062a; }
   .btn-ghost{ background:var(--panel2); color:var(--txt); border:1px solid var(--line); }
   .btn-danger{ background:#3a2630; color:#ff9a9a; border:1px solid #5a2f3f; }
+  .btn-zip{ background:var(--gold); color:#2a2400; }
   .toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
   .tabs{ display:flex; gap:6px; flex-wrap:wrap; }
   .tab{ background:var(--panel2); border:1px solid var(--line); color:var(--txt); }
   .tab.active{ background:var(--accent); color:#06210a; border-color:var(--accent); }
   .el{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px; margin-top:8px; }
+  .el-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
   .flagbox{ font-family:monospace; background:#0d0f14; border:1px solid var(--line); border-radius:6px; padding:6px 9px; color:var(--accent); display:inline-block; }
-  pre{ background:#0d0f14; border:1px solid var(--line); border-radius:8px; padding:14px; overflow:auto; max-height:340px; font-size:12px; margin:0; white-space:pre; }
+  pre{ background:#0d0f14; border:1px solid var(--line); border-radius:8px; padding:12px; overflow:auto; max-height:240px; font-size:12px; margin:0; white-space:pre; }
   .hint{ color:var(--muted); font-size:11px; margin-top:6px; }
-  table.legend{ width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
-  table.legend td{ border:1px solid var(--line); padding:4px 7px; } table.legend td:first-child{ color:var(--accent); }
-  /* preview tipo Hive */
-  #stage{ position:relative; width:100%; max-width:480px; aspect-ratio:16/10; margin:0 auto; border-radius:8px; overflow:hidden;
-    border:1px solid #000; box-shadow:0 6px 24px rgba(0,0,0,.5);
-    background:repeating-linear-gradient(45deg,#2a2233 0 18px,#2f2638 18px 36px); display:flex; }
-  #modal{ margin:auto; width:78%; height:86%; background:rgba(8,8,10,.9); border:2px solid #000; border-radius:3px;
-    display:flex; flex-direction:column; padding:8px; overflow:hidden; }
-  .h-title{ font-family:"Segoe UI",sans-serif; font-weight:800; color:#fff; font-size:16px; text-shadow:1px 1px 0 #000; letter-spacing:.5px; }
-  .h-rule{ height:3px; background:var(--gold); margin:4px 0 6px; }
-  .h-body{ flex:1; display:flex; gap:6px; overflow:hidden; }
-  .h-col{ display:flex; flex-direction:column; gap:5px; overflow:auto; }
-  .h-desc{ background:rgba(0,0,0,.45); border-radius:4px; color:#5cc0ff; font-size:11px; padding:8px; text-shadow:1px 1px 0 #000; }
-  .h-btn{ background:#2b2b2b; border-radius:3px; color:#fff; text-align:center; padding:7px 6px; font-size:11px; text-shadow:1px 1px 0 #000; }
-  .h-btn.special{ background:#7d2bb0; } .h-btn.banner{ background:#1a1a1a; color:var(--gold); border:1px solid #444; min-height:44px; display:flex; align-items:center; justify-content:center; }
-  .h-grid{ display:grid; grid-template-columns:1fr 1fr; gap:5px; overflow:auto; }
-  .h-card{ background:rgba(255,255,255,.07); border-radius:4px; padding:6px; text-align:center; }
-  .h-card .ic{ height:46px; background:rgba(255,255,255,.12); border-radius:3px; display:flex; align-items:center; justify-content:center; color:#6ad36a; font-size:9px; margin-bottom:4px; overflow:hidden; }
-  .h-card .ic img{ max-width:100%; max-height:100%; } .h-card .tt{ color:#fff; font-size:11px; font-weight:700; text-shadow:1px 1px 0 #000; }
+  #stage{ position:relative; width:100%; max-width:470px; aspect-ratio:16/11; margin:0 auto; border-radius:8px; overflow:hidden;
+    border:1px solid #000; box-shadow:0 6px 24px rgba(0,0,0,.5); background:repeating-linear-gradient(45deg,#2a2233 0 18px,#2f2638 18px 36px); }
+  #formBox{ position:absolute; inset:8% 20%; background:rgba(14,14,18,.92); border:2px solid #0a0a0c; border-radius:4px; overflow:hidden; }
+  .ov{ position:absolute; pointer-events:none; }
+  .ov-img{ background-size:cover; background-position:center; border:1px dashed rgba(106,211,106,.6); display:flex; align-items:center; justify-content:center; color:#6ad36a; font-size:9px; text-align:center; overflow:hidden; }
+  .ov-img.has-src{ border-color:transparent; }
+  .ov-label{ white-space:nowrap; text-shadow:1px 1px 0 #000; }
+  .pv-title{ color:#fff; font-weight:800; text-align:center; text-shadow:1px 1px 0 #000; }
+  .pv-desc{ color:#5cc0ff; text-align:center; font-size:11px; text-shadow:1px 1px 0 #000; }
+  .pv-btn{ background:#6a7180; border:1px solid #2c313c; color:#fff; text-align:center; padding:5px; border-radius:2px; font-size:11px; text-shadow:1px 1px 0 #000; margin-bottom:4px; }
   .stage-note{ text-align:center; color:var(--muted); font-size:11px; margin-top:6px; }
+  details{ margin-top:10px; } summary{ cursor:pointer; color:var(--accent); font-size:13px; font-weight:600; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Compositor de forms estilo <span style="color:var(--gold)">The Hive</span></h1>
-  <p>Cada form usa un <b>layout real de Hive</b> activado por un flag invisible en el título (<code>§m§a</code>…).
-     Exporta el <code>forms.js</code> (script) y un <code>server_form.json</code> con la estructura conmutadora de Hive.
-     Requiere los paneles de la pack de Hive (<code>hive_*_modal</code>) en tu Resource Pack.</p>
+  <h1>Generador de UIs personalizadas <span class="ver" id="ver">build 5</span></h1>
+  <p>Crea cada UI en su archivo (ej. <code>SkyWarsForm.json</code>), el <code>server_form.json</code> con solo las
+     <b>referencias + activación</b> por flag, y el <code>_ui_defs.json</code>. Descarga todo como <code>.zip</code>.
+     100% offline. Si el número de build de arriba no cambia tras re-descargar, estás abriendo una copia vieja.</p>
 </header>
 
 <div class="wrap">
   <div>
     <div class="card">
-      <h2>1 · Formularios</h2>
+      <h2>1 · Formularios (UIs)</h2>
       <div class="tabs" id="tabs"></div>
       <div class="toolbar">
-        <button class="btn-ghost" data-act="addForm">+ Nuevo form</button>
-        <button class="btn-danger" data-act="removeForm">Eliminar form activo</button>
+        <button class="btn-ghost" data-act="addForm">+ Nueva UI</button>
+        <button class="btn-danger" data-act="removeForm">Eliminar UI activa</button>
       </div>
+      <div class="hint">Cada UI = un archivo propio + una referencia en <code>server_form.json</code> activada por su flag.</div>
     </div>
     <div class="card" id="formCard"></div>
-    <div class="card">
-      <h2>Layouts y flags de Hive</h2>
-      <table class="legend" id="legend"></table>
-      <div class="hint">Sub-flags de botón (en el texto): <code>§m§a</code> = banner · <code>§m§b</code> = especial (morado).</div>
-    </div>
+    <div class="card" id="elemCard"></div>
   </div>
 
   <div>
     <div class="card">
-      <h2>Vista previa (form activo)</h2>
+      <h2>Vista previa (UI activa)</h2>
       <div id="stage"></div>
-      <div class="stage-note">Aproximación del layout de Hive. Carga un icono local por botón para verlo.</div>
+      <div class="stage-note">Aproximación. Carga una imagen local por elemento para verla.</div>
     </div>
+
     <div class="card">
-      <h2>forms.js (cómo abrir cada form)</h2>
-      <div class="toolbar" style="margin-top:0;margin-bottom:10px">
-        <button class="btn-primary" data-act="dl" data-arg="js">⬇ Descargar forms.js</button>
-        <button class="btn-2" data-act="cp" data-arg="outJs">⧉ Copiar</button>
+      <h2>Archivos a generar</h2>
+      <div class="toolbar" style="margin-top:0">
+        <button class="btn-zip" data-act="zip">⬇ Descargar todo (.zip)</button>
       </div>
+      <div class="hint">El zip trae <code>ui/_ui_defs.json</code>, <code>ui/server_form.json</code>,
+        <code>ui/forms/*.json</code> y <code>scripts/forms.js</code>.</div>
+
+      <h3>ui/server_form.json (solo referencias + activación)</h3>
+      <div class="toolbar" style="margin-top:0;margin-bottom:6px"><button class="btn-2" data-act="cp" data-arg="outServer">⧉ Copiar</button></div>
+      <pre id="outServer"></pre>
+
+      <h3>ui/_ui_defs.json</h3>
+      <div class="toolbar" style="margin-top:0;margin-bottom:6px"><button class="btn-2" data-act="cp" data-arg="outDefs">⧉ Copiar</button></div>
+      <pre id="outDefs"></pre>
+
+      <h3>ui/forms/<span id="panelName"></span> (UI activa)</h3>
+      <div class="toolbar" style="margin-top:0;margin-bottom:6px"><button class="btn-2" data-act="cp" data-arg="outPanel">⧉ Copiar</button></div>
+      <pre id="outPanel"></pre>
+
+      <h3>scripts/forms.js</h3>
+      <div class="toolbar" style="margin-top:0;margin-bottom:6px"><button class="btn-2" data-act="cp" data-arg="outJs">⧉ Copiar</button></div>
       <pre id="outJs"></pre>
-    </div>
-    <div class="card">
-      <h2>server_form.json (estructura conmutadora)</h2>
-      <div class="toolbar" style="margin-top:0;margin-bottom:10px">
-        <button class="btn-primary" data-act="dl" data-arg="json">⬇ Descargar server_form.json</button>
-        <button class="btn-2" data-act="cp" data-arg="outJson">⧉ Copiar</button>
-      </div>
-      <pre id="outJson"></pre>
-      <div class="hint">Va en <code>ui/server_form.json</code> de tu pack de Hive. Referencia los paneles <code>hive_*_modal</code>
-        (que ya trae Hive); no los redibuja. Mantén las texturas de Hive.</div>
     </div>
   </div>
 </div>
@@ -109,132 +111,171 @@
 <script>
 "use strict";
 (function () {
-  // Layouts reales de Hive: flag (en título) + namespace del panel
-  const LAYOUTS = [
-    { key:"grid",         name:"Grid de botones",                  flag:"§m§a", ns:"hive_grid_modal" },
-    { key:"image_grid",   name:"Grid con imágenes",                flag:"§m§d", ns:"hive_image_grid_modal" },
-    { key:"left_button",  name:"Botones + descripción (izquierda)",flag:"§m§b", ns:"hive_left_button_modal" },
-    { key:"bottom_button",name:"Banners arriba + descripción",     flag:"§m§c", ns:"hive_bottom_button_modal" },
-    { key:"square_image", name:"Imagen cuadrada + descripción",    flag:"§m§e", ns:"hive_square_image_modal" },
-    { key:"motd",         name:"MOTD (solo texto)",                flag:"§m§f", ns:"hive_motd_modal" },
-    { key:"store",        name:"Tienda",                           flag:"§m§0", ns:"hive_store_modal" },
-    { key:"wrapped",      name:"Wrapped",                          flag:"§m§1", ns:"hive_wrapped_modal" },
-  ];
-  const layoutOf = k => LAYOUTS.find(l => l.key === k) || LAYOUTS[0];
-  const BTN_STYLES = [ { key:"normal", name:"Normal", flag:"" },
-    { key:"banner", name:"Banner (§m§a)", flag:"§m§a" }, { key:"special", name:"Especial morado (§m§b)", flag:"§m§b" } ];
-  const styleOf = k => BTN_STYLES.find(s => s.key === k) || BTN_STYLES[0];
+  const ANCHORS = ["top_left","top_middle","top_right","left_middle","center","right_middle","bottom_left","bottom_middle","bottom_right"];
+  const FLAG_POOL = ["a","b","c","d","e","f","0","1","2","3","4","5","6","7","8","9"].map(ch => "§m§" + ch);
 
   let forms = [], active = null, uid = 0;
+  const num = (v, d) => { const n = Number(v); return isNaN(n) ? d : n; };
   const slug = s => (s || "x").toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "x";
   const clean = t => String(t || "").replace(/§./g, "");
   const esc = s => String(s).replace(/"/g, "&quot;");
   const el = id => document.getElementById(id);
+  const pascal = s => (String(s || "Form").replace(/[^a-zA-Z0-9]+/g, " ").trim().split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join("")) || "Form";
+  const fileName = f => pascal(f.name) + "Form.json";
+  const nsOf = f => slug(f.id) + "_form";
 
   function addForm() {
     uid++;
     const fid = uid;
-    const buttons = [ btn("Solitario"), btn("Dúos"), btn("Escuadrones"), btn("MEGA LTM") ];
-    forms.push({ uid: fid, id: "form" + fid, name: "Form " + (forms.length + 1), layout: "grid",
-      pvTitle: "JUGAR SKYWARS", pvBody: "¡Extrae minerales de la suerte y pelea! El equipo que sobreviva gana.",
-      buttons });
-    active = fid; render();
+    forms.push({ uid: fid, id: "form" + fid, name: "SkyWars",
+      flag: FLAG_POOL[forms.length] || FLAG_POOL[FLAG_POOL.length - 1],
+      pvTitle: "JUGAR SKYWARS", pvBody: "¡Elige tu modo de juego!", pvButtons: "Solitario, Dúos, Escuadrones",
+      titleOn: true, titleOffsetY: 10, titleScale: 1.5, descOn: true, descOffsetY: 34,
+      btnOn: true, btnWidth: 200, btnOffsetY: 70, images: [], labels: [] });
+    active = fid; reflag(); render();
   }
-  function btn(text, style, icon) { uid++; return { id: uid, text: text || "Botón", style: style || "normal", icon: icon || "" }; }
-  function removeForm() { forms = forms.filter(f => f.uid !== active); active = forms.length ? forms[forms.length - 1].uid : null; render(); }
+  function removeForm() { forms = forms.filter(f => f.uid !== active); active = forms.length ? forms[forms.length - 1].uid : null; reflag(); render(); }
+  function reflag() { forms.forEach((f, i) => { f.flag = FLAG_POOL[i] || FLAG_POOL[FLAG_POOL.length - 1]; }); }
   const getActive = () => forms.find(f => f.uid === active);
 
-  function setF(field, value) { const f = getActive(); if (!f) return; f[field] = value; if (field === "layout") render(); else refresh(); }
-  function addBtn() { const f = getActive(); if (!f) return; f.buttons.push(btn("Nuevo botón")); render(); }
-  function removeBtn(id) { const f = getActive(); if (!f) return; f.buttons = f.buttons.filter(b => b.id !== id); render(); }
-  function updBtn(id, key, value) { const f = getActive(); if (!f) return; const b = f.buttons.find(x => x.id === id); if (!b) return; b[key] = value; if (key === "style") render(); else refresh(); }
-  function loadIcon(id, input) { const f = getActive(); if (!f) return; const b = f.buttons.find(x => x.id === id);
-    const file = input.files && input.files[0]; if (!b || !file) return;
-    const r = new FileReader(); r.onload = () => { b._src = r.result; drawPreview(); }; r.readAsDataURL(file); }
+  function setF(field, value) { const f = getActive(); if (!f) return; f[field] = value;
+    if (field === "titleOn" || field === "descOn" || field === "btnOn") render(); else refresh(); }
+  function addEl(kind) { const f = getActive(); if (!f) return; uid++;
+    if (kind === "label") f.labels.push({ id: uid, name: "texto" + uid, text: "§lMi texto", color: "#ffffff",
+      anchor_from: "top_middle", anchor_to: "top_middle", ox: 0, oy: 120, layer: 20 });
+    else f.images.push({ id: uid, name: (kind === "bg" ? "fondo" : "img") + uid, texture: "textures/ui/mi_textura",
+      fill: kind === "bg", w: 280, h: 70, anchor_from: kind === "bg" ? "center" : "top_middle",
+      anchor_to: kind === "bg" ? "center" : "top_middle", ox: 0, oy: kind === "bg" ? 0 : 40, layer: kind === "bg" ? 1 : 15, _src: null });
+    render();
+  }
+  function removeEl(list, id) { const f = getActive(); if (!f) return; f[list] = f[list].filter(e => e.id !== id); render(); }
+  function updEl(list, id, key, value) { const f = getActive(); if (!f) return; const e = f[list].find(x => x.id === id);
+    if (!e) return; e[key] = value; if (key === "fill") render(); else refresh(); }
+  function loadImg(id, input) { const f = getActive(); if (!f) return; const e = f.images.find(x => x.id === id);
+    const file = input.files && input.files[0]; if (!e || !file) return;
+    const r = new FileReader(); r.onload = () => { e._src = r.result; drawPreview(); }; r.readAsDataURL(file); }
 
-  /* ---- helpers UI (data-attrs, sin handlers inline) ---- */
-  const inpF = (key, value) => `<input type="text" data-f="${key}" value="${esc(value)}">`;
-  const inpB = (id, key, value) => `<input type="text" data-bt="${id}" data-key="${key}" value="${esc(value)}">`;
-  function selLayout(value) { return `<select data-f="layout">` +
-    LAYOUTS.map(l => `<option value="${l.key}" ${l.key === value ? "selected" : ""}>${l.name} · ${l.flag}</option>`).join("") + `</select>`; }
-  function selStyle(id, value) { return `<select data-bt="${id}" data-key="style">` +
-    BTN_STYLES.map(s => `<option value="${s.key}" ${s.key === value ? "selected" : ""}>${s.name}</option>`).join("") + `</select>`; }
+  /* ---- helpers UI ---- */
+  function inpF(key, value, type) { if (type === "checkbox") return `<input type="checkbox" data-f="${key}" ${value ? "checked" : ""}>`;
+    return `<input type="${type || "text"}" data-f="${key}" data-type="${type || "text"}" value="${esc(value)}">`; }
+  function inpE(list, id, key, value, type) { if (type === "checkbox") return `<input type="checkbox" data-list="${list}" data-elid="${id}" data-key="${key}" ${value ? "checked" : ""}>`;
+    return `<input type="${type || "text"}" data-list="${list}" data-elid="${id}" data-key="${key}" data-type="${type || "text"}" value="${esc(value)}">`; }
+  function selE(list, id, key, value) { return `<select data-list="${list}" data-elid="${id}" data-key="${key}">` +
+    ANCHORS.map(a => `<option ${a === value ? "selected" : ""}>${a}</option>`).join("") + `</select>`; }
+  const rowF = (label, key, val, type) => `<div><label>${label}</label>${inpF(key, val, type)}</div>`;
+  function anchorBlock(list, e) { return `<div class="row"><div><label>anchor_from</label>${selE(list, e.id, "anchor_from", e.anchor_from)}</div>
+    <div><label>anchor_to</label>${selE(list, e.id, "anchor_to", e.anchor_to)}</div></div>
+    <div class="row3"><div><label>offset X</label>${inpE(list, e.id, "ox", e.ox, "number")}</div>
+    <div><label>offset Y</label>${inpE(list, e.id, "oy", e.oy, "number")}</div>
+    <div><label>layer</label>${inpE(list, e.id, "layer", e.layer, "number")}</div></div>`; }
+  function elCard(list, e, title, body) { return `<div class="el"><div class="el-head"><strong>${title} · ${e.name}</strong>
+    <button class="btn-danger" data-act="removeEl" data-arg="${list}" data-arg2="${e.id}">Quitar</button></div>
+    <label>Nombre del control</label>${inpE(list, e.id, "name", e.name)}${body}</div>`; }
 
   function render() {
-    el("legend").innerHTML = LAYOUTS.map(l => `<tr><td>${l.flag}</td><td>${l.name}</td><td>${l.ns}</td></tr>`).join("");
     el("tabs").innerHTML = forms.length
       ? forms.map(f => `<button class="tab ${f.uid === active ? "active" : ""}" data-act="selectForm" data-arg="${f.uid}">${f.name}</button>`).join("")
-      : "<span class='hint'>Sin formularios. Crea uno.</span>";
+      : "<span class='hint'>Sin UIs. Crea una.</span>";
+    const f = getActive(), fc = el("formCard"), ec = el("elemCard");
+    if (!f) { fc.innerHTML = ""; ec.innerHTML = ""; refresh(); return; }
 
-    const f = getActive(), fc = el("formCard");
-    if (!f) { fc.innerHTML = ""; refresh(); return; }
-
-    let btnsHtml = f.buttons.map(b => `<div class="el">
-      <div class="row3">
-        <div><label>Texto del botón</label>${inpB(b.id, "text", b.text)}</div>
-        <div><label>Estilo</label>${selStyle(b.id, b.style)}</div>
-        <button class="btn-danger" data-act="removeBtn" data-arg2="${b.id}">✕</button>
-      </div>
-      <label>Icono (ruta de textura, opcional)</label>${inpB(b.id, "icon", b.icon)}
-      <label>Icono local para previsualizar (no se exporta)</label>
-      <input type="file" accept="image/*" data-act="loadIcon" data-bt="${b.id}">
-    </div>`).join("");
-
-    fc.innerHTML = `<h2>2 · Form activo: ${f.name}</h2>
+    fc.innerHTML = `<h2>2 · UI activa: ${f.name}</h2>
       <label>Nombre / ID (slug, único)</label>${inpF("id", f.id)}
-      <label>Nombre visible</label>${inpF("name", f.name)}
-      <label>Layout de Hive</label>${selLayout(f.layout)}
-      <label>Flag de layout (va al final del título, invisible en el juego)</label>
-      <div class="flagbox">${layoutOf(f.layout).flag}</div>
+      <label>Nombre visible (define el archivo: <b>${fileName(f)}</b>)</label>${inpF("name", f.name)}
+      <label>Flag de activación (invisible, va al final del título)</label><div class="flagbox">${f.flag}</div>
       <label>Título</label>${inpF("pvTitle", f.pvTitle)}
       <label>Cuerpo / descripción (#form_text)</label>${inpF("pvBody", f.pvBody)}
-      <h2 style="margin-top:14px">Botones</h2>
-      ${btnsHtml || "<div class='hint'>Sin botones.</div>"}
-      <div class="toolbar"><button class="btn-ghost" data-act="addBtn">+ Botón</button></div>`;
+      <label>Botones para el script (coma)</label>${inpF("pvButtons", f.pvButtons)}
+      <div class="hint">Título y botones reales vienen del script; aquí se previsualizan y se vuelcan en forms.js.</div>
+      <details><summary>Ajustes de layout</summary>
+        <div class="chk">${inpF("titleOn", f.titleOn, "checkbox")}<label>Mostrar título</label></div>
+        <div class="row">${rowF("Título offset Y", "titleOffsetY", f.titleOffsetY, "number")}${rowF("Título escala", "titleScale", f.titleScale, "number")}</div>
+        <div class="chk">${inpF("descOn", f.descOn, "checkbox")}<label>Mostrar descripción</label></div>
+        ${f.descOn ? `<label>Descripción offset Y</label>${inpF("descOffsetY", f.descOffsetY, "number")}` : ""}
+        <div class="chk">${inpF("btnOn", f.btnOn, "checkbox")}<label>Mostrar botones</label></div>
+        ${f.btnOn ? `<div class="row">${rowF("Botones ancho", "btnWidth", f.btnWidth, "number")}${rowF("Botones offset Y", "btnOffsetY", f.btnOffsetY, "number")}</div>` : ""}
+      </details>`;
+
+    let html = "";
+    f.images.forEach(e => { html += elCard("images", e, "🖼 Imagen",
+      `<label>Ruta de textura</label>${inpE("images", e.id, "texture", e.texture)}
+       <div class="chk">${inpE("images", e.id, "fill", e.fill, "checkbox")}<label>Ocupar todo (fondo)</label></div>
+       ${e.fill ? "" : `<div class="row"><div><label>ancho</label>${inpE("images", e.id, "w", e.w, "number")}</div><div><label>alto</label>${inpE("images", e.id, "h", e.h, "number")}</div></div>`}
+       ${anchorBlock("images", e)}
+       <label>Imagen local para previsualizar (no se exporta)</label>
+       <input type="file" accept="image/*" data-act="loadImg" data-elid="${e.id}">`); });
+    f.labels.forEach(e => { html += elCard("labels", e, "🔤 Texto",
+      `<label>Texto (admite §)</label>${inpE("labels", e.id, "text", e.text)}
+       <label>Color</label>${inpE("labels", e.id, "color", e.color, "color")}${anchorBlock("labels", e)}`); });
+    ec.innerHTML = `<h2>3 · Elementos de la UI</h2><div>${html || "<div class='hint'>Sin elementos. Añade imágenes, fondo o textos.</div>"}</div>
+      <div class="toolbar">
+        <button class="btn-ghost" data-act="addEl" data-arg="img">+ Imagen</button>
+        <button class="btn-ghost" data-act="addEl" data-arg="bg">+ Fondo (100%)</button>
+        <button class="btn-ghost" data-act="addEl" data-arg="label">+ Texto</button>
+      </div>`;
     refresh();
   }
 
-  /* ---- exportación ---- */
-  function buildScript() {
-    let s = 'import { ActionFormData } from "@minecraft/server-ui";\n\n';
-    s += '// Flags de LAYOUT (van en el TÍTULO). Estructura real de The Hive.\n';
-    s += 'const LAYOUT = {\n';
-    LAYOUTS.forEach(l => { s += `  ${l.key}: "\\u00a7m\\u00a7${l.flag.slice(-1)}",\n`; });
-    s += '};\n// Sub-flags de ESTILO de botón (van en el TEXTO del botón).\n';
-    s += 'const BTN = { banner: "\\u00a7m\\u00a7a", special: "\\u00a7m\\u00a7b" };\n\n';
-    forms.forEach(f => {
-      const id = slug(f.id);
-      s += `// "${f.name}" — layout: ${layoutOf(f.layout).name}\n`;
-      s += `export async function open_${id}(player) {\n  const form = new ActionFormData()\n`;
-      s += `    .title(${JSON.stringify(f.pvTitle || f.name)} + LAYOUT.${f.layout})`;
-      if (f.pvBody) s += `\n    .body(${JSON.stringify(f.pvBody)})`;
-      f.buttons.forEach(b => {
-        const st = styleOf(b.style);
-        let txt = JSON.stringify(b.text);
-        if (st.key === "banner") txt += " + BTN.banner";
-        else if (st.key === "special") txt += " + BTN.special";
-        s += `\n    .button(${txt}${b.icon ? `, ${JSON.stringify(b.icon)}` : ""})`;
-      });
-      s += `;\n\n  const r = await form.show(player);\n  if (r.canceled) return;\n  // r.selection -> índice del botón pulsado\n}\n\n`;
-    });
-    return s;
+  /* ---- construir la UI personalizada (archivo propio) ---- */
+  function hexToRgb(hex) { const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "#ffffff");
+    return m ? [parseInt(m[1],16)/255, parseInt(m[2],16)/255, parseInt(m[3],16)/255].map(n => +n.toFixed(3)) : [1,1,1]; }
+
+  function buildFormFile(f) {
+    const ns = nsOf(f), out = { namespace: ns }, ctrls = [];
+    if (f.titleOn) {
+      out.title_label = { type: "label", text: "#title_text", font_type: "MinecraftTen", color: "white",
+        anchor_from: "top_middle", anchor_to: "top_middle", offset: [0, num(f.titleOffsetY, 10)],
+        font_scale_factor: num(f.titleScale, 1.5), layer: 6, shadow: true, bindings: [{ binding_name: "#title_text", binding_type: "global" }] };
+      ctrls.push({ [`title@${ns}.title_label`]: {} });
+    }
+    if (f.descOn) {
+      out.desc_label = { type: "label", text: "#form_text", color: [0.36, 0.752, 1], anchor_from: "top_middle", anchor_to: "top_middle",
+        offset: [0, num(f.descOffsetY, 34)], size: ["80%", "default"], text_alignment: "center", line_padding: 2, layer: 6, shadow: true };
+      ctrls.push({ [`desc@${ns}.desc_label`]: {} });
+    }
+    if (f.btnOn) {
+      out.buttons = { type: "stack_panel", orientation: "vertical", anchor_from: "top_middle", anchor_to: "top_middle",
+        size: [num(f.btnWidth, 200), "100%c"], offset: [0, num(f.btnOffsetY, 70)], layer: 5,
+        factory: { name: "button_list_factory", control_name: `${ns}.button` }, collection_name: "form_buttons",
+        bindings: [{ binding_name: "#form_button_length", binding_name_override: "#collection_length" }] };
+      out["button@common.button"] = { size: ["100%", 26], "$pressed_button_name": "button.form_button_click",
+        bindings: [{ binding_type: "collection_details", binding_collection_name: "form_buttons" }],
+        controls: [
+          { [`default@${ns}.button_face`]: { "$bg_tex": "textures/ui/button_borderless_light" } },
+          { [`hover@${ns}.button_face`]: { "$bg_tex": "textures/ui/button_borderless_lighthover" } },
+          { [`pressed@${ns}.button_face`]: { "$bg_tex": "textures/ui/button_borderless_light" } } ] };
+      out.button_face = { type: "image", texture: "$bg_tex", "$bg_tex|default": "textures/ui/button_borderless_light",
+        nineslice_size: [4, 4, 4, 4], tiled: false, size: ["100%", "100%"],
+        controls: [{ label: { type: "label", text: "#form_button_text", color: [1, 1, 1], text_alignment: "center",
+          anchor_from: "center", anchor_to: "center", size: ["100% - 8px", "default"], layer: 2,
+          bindings: [{ binding_type: "collection", binding_collection_name: "form_buttons",
+            binding_name: "#form_button_text", binding_name_override: "#form_button_text" }] } }] };
+      ctrls.push({ [`buttons@${ns}.buttons`]: {} });
+    }
+    f.images.forEach(e => { const cn = slug(e.name) + "_" + e.id;
+      out[cn] = { type: "image", texture: e.texture, size: e.fill ? ["100%", "100%"] : [num(e.w, 100), num(e.h, 40)],
+        anchor_from: e.anchor_from, anchor_to: e.anchor_to, offset: [num(e.ox, 0), num(e.oy, 0)], layer: num(e.layer, 1), keep_ratio: false };
+      ctrls.push({ [`${cn}@${ns}.${cn}`]: {} }); });
+    f.labels.forEach(e => { const cn = slug(e.name) + "_" + e.id;
+      out[cn] = { type: "label", text: e.text, color: hexToRgb(e.color), anchor_from: e.anchor_from, anchor_to: e.anchor_to,
+        offset: [num(e.ox, 0), num(e.oy, 0)], layer: num(e.layer, 20), shadow: true };
+      ctrls.push({ [`${cn}@${ns}.${cn}`]: {} }); });
+    out.main_panel = { type: "panel", size: ["100%", "100%"], controls: ctrls };
+    return out;
   }
 
+  /* ---- server_form.json: SOLO referencias + activación por flag ---- */
   function buildServerForm() {
-    const used = [...new Set(forms.map(f => f.layout))];
     const out = { namespace: "server_form" };
-    out["long_form@common_dialogs.main_panel_no_buttons"] = { size: [260, 210] };
-    out["custom_form@common_dialogs.main_panel_no_buttons"] = { size: [260, 210] };
-    out["third_party_server_screen@common.base_screen"] = { "$screen_content": "server_form.hive_main_screen_content",
+    out["third_party_server_screen@common.base_screen"] = { "$screen_content": "server_form.main_screen_content",
       button_mappings: [{ from_button_id: "button.menu_cancel", to_button_id: "button.menu_exit", mapping_type: "global" }] };
-    out["hive_main_screen_content"] = { type: "panel", size: ["100%", "100%"], controls: [
+    out["main_screen_content"] = { type: "panel", size: ["100%", "100%"], controls: [
       { server_form_factory: { type: "factory", control_ids: {
-        long_form: "@server_form.hive_switching_long_form", custom_form: "@server_form.custom_form" } } } ] };
-
+        long_form: "@server_form.switching_long_form", custom_form: "@server_form.custom_form" } } } ] };
     const sw = { type: "panel", size: ["100%", "100%"] };
-    LAYOUTS.filter(l => used.includes(l.key)).forEach(l => { sw["$flag_" + l.key] = l.flag; });
-    const usedL = LAYOUTS.filter(l => used.includes(l.key));
-    const allAbsent = usedL.length ? "(" + usedL.map(l => `((#title_text - $flag_${l.key}) = #title_text)`).join(" and ") + ")" : null;
+    forms.forEach(f => { sw["$flag_" + slug(f.id)] = f.flag; });
+    const allAbsent = forms.length ? "(" + forms.map(f => `((#title_text - $flag_${slug(f.id)}) = #title_text)`).join(" and ") + ")" : null;
     const sc = [];
     const vanilla = { enabled: false, visible: false, bindings: [
       { binding_type: "global", binding_condition: "none", binding_name: "#title_text", binding_name_override: "#title_text" } ] };
@@ -242,109 +283,123 @@
       vanilla.bindings.push({ source_property_name: allAbsent, binding_type: "view", target_property_name: "#visible" });
       vanilla.bindings.push({ source_property_name: allAbsent, binding_type: "view", target_property_name: "#enabled" });
     }
-    sc.push({ "long_form@long_form": vanilla });
-    usedL.forEach(l => {
-      const present = `(not ((#title_text - $flag_${l.key}) = #title_text))`;
-      sc.push({ [`${l.key}@${l.ns}.main_panel`]: { enabled: false, visible: false, bindings: [
+    sc.push({ "vanilla@long_form": vanilla });
+    forms.forEach(f => {
+      const present = `(not ((#title_text - $flag_${slug(f.id)}) = #title_text))`;
+      sc.push({ [`${slug(f.id)}@${nsOf(f)}.main_panel`]: { enabled: false, visible: false, bindings: [
         { binding_type: "global", binding_condition: "none", binding_name: "#title_text", binding_name_override: "#title_text" },
         { source_property_name: present, binding_type: "view", target_property_name: "#visible" },
         { source_property_name: present, binding_type: "view", target_property_name: "#enabled" } ] } });
     });
     sw.controls = sc;
-    out["hive_switching_long_form"] = sw;
-    out["hive_close_button@common.close_button"] = { anchor_from: "top_right", anchor_to: "top_right", offset: [3, 3], layer: 6 };
+    out["switching_long_form"] = sw;
     return out;
   }
 
+  function buildUiDefs() { return { ui_defs: forms.map(f => "ui/forms/" + fileName(f)) }; }
+
+  function buildScript() {
+    let s = 'import { ActionFormData } from "@minecraft/server-ui";\n\n';
+    s += '// Flags invisibles que activan cada UI (van en el TÍTULO).\nconst FLAG = {\n';
+    forms.forEach(f => { s += `  ${slug(f.id)}: "\\u00a7m\\u00a7${f.flag.slice(-1)}", // ${f.name} -> ${fileName(f)}\n`; });
+    s += '};\n\n';
+    forms.forEach(f => {
+      const id = slug(f.id);
+      s += `// Abrir "${f.name}"\nexport async function open_${id}(player) {\n  const form = new ActionFormData()\n`;
+      s += `    .title(${JSON.stringify(f.pvTitle || f.name)} + FLAG.${id})`;
+      if (f.pvBody) s += `\n    .body(${JSON.stringify(f.pvBody)})`;
+      (f.pvButtons || "").split(",").map(x => x.trim()).filter(Boolean).forEach(b => { s += `\n    .button(${JSON.stringify(b)})`; });
+      s += `;\n\n  const r = await form.show(player);\n  if (r.canceled) return;\n}\n\n`;
+    });
+    return s;
+  }
+
   function refresh() {
+    const f = getActive();
+    el("outServer").textContent = JSON.stringify(buildServerForm(), null, 2);
+    el("outDefs").textContent = JSON.stringify(buildUiDefs(), null, 2);
     el("outJs").textContent = buildScript();
-    el("outJson").textContent = JSON.stringify(buildServerForm(), null, 2);
+    el("panelName").textContent = f ? fileName(f) : "(sin UI)";
+    el("outPanel").textContent = f ? JSON.stringify(buildFormFile(f), null, 2) : "";
     drawPreview();
   }
 
-  /* ---- vista previa por layout ---- */
-  function btnEl(b) {
-    const st = styleOf(b.style).key;
-    if (st === "banner") { const d = document.createElement("div"); d.className = "h-btn banner";
-      if (b._src) { const i = document.createElement("img"); i.src = b._src; d.appendChild(i); } else d.textContent = clean(b.text);
-      return d; }
-    const d = document.createElement("div"); d.className = "h-btn" + (st === "special" ? " special" : ""); d.textContent = clean(b.text); return d;
-  }
-  function cardEl(b, withImg) {
-    const c = document.createElement("div"); c.className = "h-card";
-    if (withImg) { const ic = document.createElement("div"); ic.className = "ic";
-      if (b._src) { const i = document.createElement("img"); i.src = b._src; ic.appendChild(i); } else ic.textContent = b.icon || "icono"; c.appendChild(ic); }
-    const tt = document.createElement("div"); tt.className = "tt"; tt.textContent = clean(b.text); c.appendChild(tt); return c;
-  }
+  /* ---- preview ---- */
+  const anchorPct = a => [a.includes("left") ? 0 : a.includes("right") ? 1 : 0.5, a.includes("top") ? 0 : a.includes("bottom") ? 1 : 0.5];
   function drawPreview() {
     const stage = el("stage"); stage.innerHTML = "";
+    const box = document.createElement("div"); box.id = "formBox"; stage.appendChild(box);
     const f = getActive(); if (!f) return;
-    const modal = document.createElement("div"); modal.id = "modal"; stage.appendChild(modal);
-    const title = document.createElement("div"); title.className = "h-title"; title.textContent = clean(f.pvTitle) || "TÍTULO"; modal.appendChild(title);
-    const rule = document.createElement("div"); rule.className = "h-rule"; modal.appendChild(rule);
-    const body = document.createElement("div"); body.className = "h-body"; modal.appendChild(body);
-    const lay = f.layout;
-    const desc = () => { const d = document.createElement("div"); d.className = "h-desc"; d.style.flex = "1"; d.textContent = clean(f.pvBody); return d; };
-
-    if (lay === "grid" || lay === "image_grid") {
-      const g = document.createElement("div"); g.className = "h-grid"; g.style.flex = "1";
-      f.buttons.forEach(b => g.appendChild(cardEl(b, lay === "image_grid"))); body.appendChild(g);
-    } else if (lay === "left_button") {
-      const col = document.createElement("div"); col.className = "h-col"; col.style.flex = "1.2";
-      f.buttons.forEach(b => col.appendChild(btnEl(b))); body.appendChild(col); body.appendChild(desc());
-    } else if (lay === "bottom_button") {
-      const wrap = document.createElement("div"); wrap.style.cssText = "flex:1;display:flex;flex-direction:column;gap:6px";
-      const row = document.createElement("div"); row.style.cssText = "display:flex;gap:5px;overflow:auto";
-      f.buttons.forEach(b => { const x = cardEl(b, true); x.style.minWidth = "70px"; row.appendChild(x); });
-      wrap.appendChild(row); wrap.appendChild(desc()); body.appendChild(wrap);
-    } else if (lay === "square_image") {
-      const img = document.createElement("div"); img.className = "h-card"; img.style.cssText = "flex:1;display:flex;align-items:center;justify-content:center";
-      const b0 = f.buttons[0];
-      if (b0 && b0._src) { const i = document.createElement("img"); i.src = b0._src; i.style.maxHeight = "100%"; img.appendChild(i); }
-      else { const ic = document.createElement("div"); ic.className = "ic"; ic.style.cssText = "width:80%;height:70%"; ic.textContent = "imagen del botón 1"; img.appendChild(ic); }
-      const wrap = document.createElement("div"); wrap.style.cssText = "flex:1;display:flex;flex-direction:column;gap:6px";
-      wrap.appendChild(img); wrap.appendChild(desc()); body.appendChild(wrap);
-    } else { // motd / store / wrapped
-      const wrap = document.createElement("div"); wrap.style.cssText = "flex:1;display:flex;flex-direction:column;gap:6px";
-      wrap.appendChild(desc());
-      const col = document.createElement("div"); col.className = "h-col";
-      f.buttons.forEach(b => col.appendChild(btnEl(b))); wrap.appendChild(col); body.appendChild(wrap);
-    }
+    const place = (d, e) => { const [ax, ay] = anchorPct(e.anchor_to), [fx, fy] = anchorPct(e.anchor_from);
+      d.style.position = "absolute"; d.style.left = (ax * 100) + "%"; d.style.top = (ay * 100) + "%";
+      d.style.transform = `translate(calc(-${fx * 100}% + ${num(e.ox, 0)}px), calc(-${fy * 100}% + ${num(e.oy, 0)}px))`; d.style.zIndex = String(num(e.layer, 0)); };
+    [...f.images].sort((a, b) => num(a.layer, 0) - num(b.layer, 0)).forEach(e => {
+      const d = document.createElement("div"); d.className = "ov ov-img" + (e._src ? " has-src" : "");
+      if (e.fill) { d.style.position = "absolute"; d.style.inset = "0"; d.style.zIndex = String(num(e.layer, 0)); }
+      else { place(d, e); d.style.width = num(e.w, 100) + "px"; d.style.height = num(e.h, 40) + "px"; }
+      if (e._src) d.style.backgroundImage = `url(${e._src})`; else d.textContent = e.texture; box.appendChild(d); });
+    if (f.titleOn) { const t = document.createElement("div"); t.className = "pv-title ov"; t.style.left = "50%"; t.style.top = "0";
+      t.style.transform = `translate(-50%, ${num(f.titleOffsetY, 10)}px)`; t.style.fontSize = (11 * num(f.titleScale, 1.5)) + "px"; t.style.zIndex = "6";
+      t.textContent = clean(f.pvTitle) || "TÍTULO"; box.appendChild(t); }
+    if (f.descOn) { const d = document.createElement("div"); d.className = "pv-desc ov"; d.style.left = "50%"; d.style.top = "0"; d.style.width = "80%";
+      d.style.transform = `translate(-50%, ${num(f.descOffsetY, 34)}px)`; d.style.zIndex = "6"; d.textContent = clean(f.pvBody); box.appendChild(d); }
+    if (f.btnOn) { const w = document.createElement("div"); w.className = "ov"; w.style.left = "50%"; w.style.top = "0"; w.style.width = num(f.btnWidth, 200) + "px";
+      w.style.transform = `translate(-50%, ${num(f.btnOffsetY, 70)}px)`; w.style.zIndex = "5";
+      (f.pvButtons || "").split(",").map(s => clean(s).trim()).filter(Boolean).forEach(b => { const x = document.createElement("div"); x.className = "pv-btn"; x.textContent = b; w.appendChild(x); });
+      box.appendChild(w); }
+    f.labels.forEach(e => { const d = document.createElement("div"); d.className = "ov ov-label"; place(d, e);
+      const c = hexToRgb(e.color).map(n => Math.round(n * 255)); d.style.color = `rgb(${c[0]},${c[1]},${c[2]})`; d.textContent = clean(e.text); box.appendChild(d); });
   }
 
-  /* ---- descarga / copia ---- */
-  function dl(kind) {
-    const isJson = kind === "json";
-    const text = el(isJson ? "outJson" : "outJs").textContent;
-    const blob = new Blob([text], { type: isJson ? "application/json" : "text/javascript" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-    a.download = isJson ? "server_form.json" : "forms.js"; document.body.appendChild(a); a.click();
-    document.body.removeChild(a); URL.revokeObjectURL(a.href);
+  /* ---- ZIP (store, sin dependencias) ---- */
+  const CRC = (() => { let t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  const u16 = n => [n & 255, (n >> 8) & 255];
+  const u32 = n => [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >> 24) & 255];
+  function makeZip(files) {
+    const enc = new TextEncoder(); const parts = []; const central = []; let offset = 0;
+    files.forEach(f => {
+      const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+      const local = [].concat(u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0));
+      parts.push(new Uint8Array(local), name, data);
+      const cen = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset));
+      central.push(new Uint8Array(cen), name);
+      offset += local.length + name.length + data.length;
+    });
+    let cSize = 0; central.forEach(c => cSize += c.length);
+    const end = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(cSize), u32(offset), u16(0)));
+    return new Blob([...parts, ...central, end], { type: "application/zip" });
+  }
+  function downloadZip() {
+    const files = [
+      { name: "ui/_ui_defs.json", text: JSON.stringify(buildUiDefs(), null, 2) },
+      { name: "ui/server_form.json", text: JSON.stringify(buildServerForm(), null, 2) },
+      { name: "scripts/forms.js", text: buildScript() },
+    ];
+    forms.forEach(f => files.push({ name: "ui/forms/" + fileName(f), text: JSON.stringify(buildFormFile(f), null, 2) }));
+    const a = document.createElement("a"); a.href = URL.createObjectURL(makeZip(files));
+    a.download = "custom_forms_ui.zip"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
   }
   function cp(id) { const t = el(id).textContent; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(() => {}); }
 
   /* ---- eventos por delegación ---- */
   document.addEventListener("click", e => {
-    const b = e.target.closest("[data-act]"); if (!b) return;
+    const b = e.target && e.target.closest ? e.target.closest("[data-act]") : null; if (!b) return;
     const a = b.dataset.act;
     if (a === "addForm") addForm();
     else if (a === "removeForm") removeForm();
     else if (a === "selectForm") { active = Number(b.dataset.arg); render(); }
-    else if (a === "addBtn") addBtn();
-    else if (a === "removeBtn") removeBtn(Number(b.dataset.arg2));
-    else if (a === "dl") dl(b.dataset.arg);
+    else if (a === "addEl") addEl(b.dataset.arg);
+    else if (a === "removeEl") removeEl(b.dataset.arg, Number(b.dataset.arg2));
+    else if (a === "zip") downloadZip();
     else if (a === "cp") cp(b.dataset.arg);
   });
-  function onField(t) {
-    if (t.dataset.f != null) setF(t.dataset.f, t.value);
-    else if (t.dataset.bt != null) updBtn(Number(t.dataset.bt), t.dataset.key, t.value);
-  }
-  document.addEventListener("input", e => { if (e.target.matches("[data-f],[data-bt]")) onField(e.target); });
-  document.addEventListener("change", e => {
-    const t = e.target;
-    if (t.dataset.act === "loadIcon") { loadIcon(Number(t.dataset.bt), t); return; }
-    if (t.matches("[data-f],[data-bt]")) onField(t);
-  });
+  function onField(t) { if (t.dataset.f != null) setF(t.dataset.f, t.type === "checkbox" ? t.checked : t.value);
+    else if (t.dataset.list != null) updEl(t.dataset.list, Number(t.dataset.elid), t.dataset.key, t.type === "checkbox" ? t.checked : (t.dataset.type === "number" ? Number(t.value) : t.value)); }
+  document.addEventListener("input", e => { if (e.target && e.target.matches && e.target.matches("[data-f],[data-list]")) onField(e.target); });
+  document.addEventListener("change", e => { const t = e.target; if (!t) return;
+    if (t.dataset && t.dataset.act === "loadImg") { loadImg(Number(t.dataset.elid), t); return; }
+    if (t.matches && t.matches("[data-f],[data-list]")) onField(t); });
 
   addForm();
 })();
