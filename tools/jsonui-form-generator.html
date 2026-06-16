@@ -54,7 +54,7 @@
 </head>
 <body>
 <header>
-  <h1>Generador de UIs personalizadas <span class="ver" id="ver">build 7</span></h1>
+  <h1>Generador de UIs personalizadas <span class="ver" id="ver">build 8</span></h1>
   <p>Crea cada UI en su archivo, el <code>server_form.json</code> con solo referencias + activación por flag, y el
      <code>_ui_defs.json</code>. Botones con icono/color, texto avanzado, paneles/degradados y scroll. Guarda tu proyecto.
      Ábrelo en un navegador (no en la previsualización de Archivos). 100% offline.</p>
@@ -122,6 +122,7 @@
   const FONTS = ["default","MinecraftTen","smooth","rune"];
   const ALIGNS = ["left","center","right"];
   const FLAG_POOL = ["a","b","c","d","e","f","0","1","2","3","4","5","6","7","8","9"].map(ch => "§m§" + ch);
+  const FLAG_CHARS = FLAG_POOL.map(x => x.slice(-1));
   const STORE_KEY = "cf_project_v6";
 
   let forms = [], active = null, uid = 0;
@@ -144,8 +145,10 @@
   function newButton(text, color) { return { id: nextUid(), text: text || "Botón", icon: "", color: color || DEFAULT_BTN_COLOR, bgTexture: "", forceFlag: false }; }
   function defaultForm() {
     const fid = nextUid();
-    return { uid: fid, id: "form" + fid, name: "SkyWars", flag: FLAG_POOL[0],
+    return { uid: fid, id: "form" + fid, name: "SkyWars", flag: null,
       pvTitle: "JUGAR SKYWARS", pvBody: "¡Elige tu modo de juego!",
+      dlgW: 320, dlgHpct: 78, dimOn: true, closeOn: true,
+      bgOn: true, bgColor: "#101018", bgColor2: "#241033", bgAlpha: 0.92, borderTexture: "",
       titleOn: true, titleOffsetY: 10, titleScale: 1.5, titleColor: "#ffffff", titleFont: "MinecraftTen", titleAlign: "center", titleShadow: true,
       descOn: true, descOffsetY: 38, descColor: "#5cc0ff", descFont: "default", descAlign: "center", descShadow: true,
       btnOn: true, btnWidth: 200, btnOffsetY: 78, btnHeight: 26,
@@ -155,11 +158,15 @@
 
   function addForm() { const f = defaultForm(); forms.push(f); active = f.uid; reflag(); render(); }
   function removeForm() { forms = forms.filter(f => f.uid !== active); active = forms.length ? forms[forms.length - 1].uid : null; reflag(); render(); }
-  function reflag() { forms.forEach((f, i) => { f.flag = FLAG_POOL[i] || FLAG_POOL[FLAG_POOL.length - 1]; }); }
+  // Conserva los flags ya asignados (incluidos los editados a mano) y solo rellena los que falten con un glifo libre.
+  function reflag() { const used = new Set(forms.map(f => f.flag).filter(Boolean)); let pi = 0;
+    forms.forEach(f => { if (f.flag) return; while (pi < FLAG_POOL.length && used.has(FLAG_POOL[pi])) pi++; f.flag = FLAG_POOL[pi] || FLAG_POOL[FLAG_POOL.length - 1]; used.add(f.flag); }); }
   const getActive = () => forms.find(f => f.uid === active);
 
-  function setF(field, value) { const f = getActive(); if (!f) return; f[field] = value;
-    if (field === "titleOn" || field === "descOn" || field === "btnOn") render(); else refresh(); }
+  function setF(field, value) { const f = getActive(); if (!f) return;
+    if (field === "flagChar") { f.flag = "§m§" + value; refresh(); return; }
+    f[field] = value;
+    if (["titleOn","descOn","btnOn","bgOn","closeOn","dimOn"].includes(field)) render(); else refresh(); }
   function addBtn() { const f = getActive(); if (!f) return; f.buttons.push(newButton("Nuevo botón")); render(); }
   function removeBtn(id) { const f = getActive(); if (!f) return; f.buttons = f.buttons.filter(b => b.id !== id); render(); }
   function updBtn(id, key, value) { const f = getActive(); if (!f) return; const b = f.buttons.find(x => x.id === id); if (!b) return; b[key] = value; if (key === "forceFlag") render(); else refresh(); }
@@ -207,7 +214,8 @@
     el("formCard").innerHTML = `<h2>2 · UI activa: ${f.name}</h2>
       <label>Nombre / ID (slug, único)</label>${inpF("id", f.id)}
       <label>Nombre visible (archivo: <b>${fileName(f)}</b>)</label>${inpF("name", f.name)}
-      <label>Flag de activación (invisible, al final del título)</label><div class="flagbox">${f.flag}</div>
+      <label>Flag de activación (glifo invisible al final del título — editable)</label>
+      <div class="row"><div>${selF("flagChar", (f.flag || "§m§a").slice(-1), FLAG_CHARS)}</div><div><div class="flagbox">${f.flag || "§m§a"}</div></div></div>
       <label>Título</label>${inpF("pvTitle", f.pvTitle)}
       <label>Cuerpo / descripción (#form_text)</label>${inpF("pvBody", f.pvBody)}
       <details><summary>Título · texto avanzado</summary>
@@ -221,6 +229,15 @@
         <div class="row"><div><label>Color</label>${inpF("descColor", f.descColor, "color")}</div><div><label>Fuente</label>${selF("descFont", f.descFont, FONTS)}</div></div>
         <div class="row"><div><label>Alineación</label>${selF("descAlign", f.descAlign, ALIGNS)}</div><div><label>offset Y</label>${inpF("descOffsetY", f.descOffsetY, "number")}</div></div>
         <div class="chk">${inpF("descShadow", f.descShadow, "checkbox")}<label>Sombra</label></div>
+      </details>
+      <details><summary>Diálogo · fondo · botón cerrar · adaptación móvil</summary>
+        <div class="row"><div><label>Ancho (px, en PC)</label>${inpF("dlgW", f.dlgW, "number")}</div><div><label>Alto (% pantalla)</label>${inpF("dlgHpct", f.dlgHpct, "number")}</div></div>
+        <div class="hint">En móvil (pocket) se adapta solo: ancho 94%, alto 88%, botones más grandes.</div>
+        <div class="chk">${inpF("bgOn", f.bgOn, "checkbox")}<label>Fondo del diálogo</label></div>
+        ${f.bgOn ? `<div class="row3"><div><label>Color 1</label>${inpF("bgColor", f.bgColor, "color")}</div><div><label>Color 2</label>${inpF("bgColor2", f.bgColor2, "color")}</div><div><label>Opacidad</label>${inpF("bgAlpha", f.bgAlpha, "number")}</div></div>
+        <label>Textura de borde (nine-slice, opcional)</label>${inpF("borderTexture", f.borderTexture || "")}` : ""}
+        <div class="chk">${inpF("closeOn", f.closeOn, "checkbox")}<label>Botón de cerrar (X) arriba a la derecha</label></div>
+        <div class="chk">${inpF("dimOn", f.dimOn, "checkbox")}<label>Atenuar el fondo del mundo</label></div>
       </details>`;
 
     // botones avanzados
@@ -316,10 +333,12 @@
     if (f.btnOn && f.buttons.length) {
       const bf = buttonFlags(f);
       out.buttons = { type: "stack_panel", orientation: "vertical", anchor_from: "top_middle", anchor_to: "top_middle",
-        size: [num(f.btnWidth, 200), "100%c"], offset: [0, num(f.btnOffsetY, 78)], layer: 5,
+        "$bw|default": num(f.btnWidth, 200), variables: [{ requires: "$pocket_screen", "$bw": "92%" }],
+        size: ["$bw", "100%c"], offset: [0, num(f.btnOffsetY, 78)], layer: 5,
         factory: { name: "button_list_factory", control_name: `${ns}.button` }, collection_name: "form_buttons",
         bindings: [{ binding_name: "#form_button_length", binding_name_override: "#collection_length" }] };
-      out["button@common.button"] = { size: ["100%", num(f.btnHeight, 26)], "$pressed_button_name": "button.form_button_click",
+      out["button@common.button"] = { "$bh|default": num(f.btnHeight, 26), variables: [{ requires: "$pocket_screen", "$bh": Math.max(num(f.btnHeight, 26), 32) }],
+        size: ["100%", "$bh"], "$pressed_button_name": "button.form_button_click",
         bindings: [{ binding_type: "collection_details", binding_collection_name: "form_buttons" }],
         controls: [ { [`default@${ns}.button_face`]: {} }, { [`hover@${ns}.button_face`]: {} }, { [`pressed@${ns}.button_face`]: {} } ] };
       const faceCtl = [];
@@ -378,7 +397,28 @@
       }
     });
 
-    out.main_panel = { type: "panel", size: ["100%", "100%"], controls: ctrls };
+    // --- diálogo centrado y responsivo: fondo + contenido + botón cerrar ---
+    const dialogCtls = [];
+    if (f.bgOn !== false) dialogCtls.push({ dialog_bg: { type: "custom", renderer: "gradient_renderer",
+      color1: hexToRgba(f.bgColor || "#101018", num(f.bgAlpha, 0.92)),
+      color2: hexToRgba(f.bgColor2 || f.bgColor || "#241033", num(f.bgAlpha, 0.92)),
+      size: ["100%", "100%"], layer: 0 } });
+    if ((f.borderTexture || "").trim()) dialogCtls.push({ dialog_border: { type: "image", texture: f.borderTexture.trim(),
+      nineslice_size: [4, 4, 4, 4], tiled: false, size: ["100%", "100%"], layer: 0 } });
+    ctrls.forEach(c => dialogCtls.push(c));
+    if (f.closeOn !== false) dialogCtls.push({ "close@common.close_button": {
+      anchor_from: "top_right", anchor_to: "top_right", offset: [-2, 2], layer: 20 } });
+
+    out.dialog = { type: "panel",
+      "$dlg_w|default": num(f.dlgW, 320), "$dlg_h|default": num(f.dlgHpct, 78) + "%",
+      variables: [{ requires: "$pocket_screen", "$dlg_w": "94%", "$dlg_h": "88%" }],
+      size: ["$dlg_w", "$dlg_h"], anchor_from: "center", anchor_to: "center", controls: dialogCtls };
+
+    const mainCtls = [];
+    if (f.dimOn !== false) mainCtls.push({ dim: { type: "custom", renderer: "gradient_renderer",
+      color1: [0, 0, 0, 0.5], color2: [0, 0, 0, 0.5], size: ["300%", "300%"], layer: 0 } });
+    mainCtls.push({ [`dialog@${ns}.dialog`]: {} });
+    out.main_panel = { type: "panel", size: ["100%", "100%"], controls: mainCtls };
     return out;
   }
 
@@ -447,6 +487,9 @@
     const stage = el("stage"); stage.innerHTML = "";
     const box = document.createElement("div"); box.id = "formBox"; stage.appendChild(box);
     const f = getActive(); if (!f) return;
+    if (f.bgOn !== false) box.style.background = `linear-gradient(160deg, ${cssOf(f.bgColor)}, ${cssOf(f.bgColor2)})`;
+    if (f.closeOn !== false) { const x = document.createElement("div"); x.textContent = "✕";
+      x.style.cssText = "position:absolute;top:3px;right:5px;z-index:30;color:#fff;font-weight:700;font-size:13px;"; box.appendChild(x); }
     f.elements.forEach(e => {
       const d = document.createElement("div");
       if (e.type === "image") { d.className = "ov ov-img" + (e._src ? " has-src" : "");
@@ -547,7 +590,7 @@
   try { const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
     if (Array.isArray(saved) && saved.length) { forms = saved; nextUid(); active = forms[0].uid; } } catch (e) {}
   if (!forms.length) addForm(); else { reflag(); render(); }
-  const verEl = el("ver"); if (verEl) verEl.textContent = "build 7 · JS OK";
+  const verEl = el("ver"); if (verEl) verEl.textContent = "build 8 · JS OK";
 })();
 </script>
 </body>
