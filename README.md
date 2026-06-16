@@ -13,8 +13,9 @@ Referencia oficial usada: https://wiki.bedrock.dev/scripting/server-forms
 | `.claude/agents/minecraft-form-builder.md`    | El **agente** experto en generar formularios de Bedrock (incluye JSON-UI). |
 | `examples/hive-menu-bp/`                       | **Behavior Pack** de ejemplo, funcional, con los 3 menús de las imágenes. |
 | `examples/hive-menu-rp/`                       | **Resource Pack** (JSON-UI) que añade un **banner de imagen** al form de Murder Mystery. |
-| `tools/jsonui-form-generator.html`             | **Generador visual** (offline) que exporta el `.json` de JSON-UI de un custom form. |
-| `examples/generated/SkyWarsForm.json`          | Salida de ejemplo del generador (fondo + banner + texto). |
+| `tools/jsonui-form-generator.html`             | **Generador visual** (offline) que exporta un `server_form.json` estilo Hive (varios forms). |
+| `docs/hive-server-form-pattern.md`             | Guía del patrón "switching server form" (flags invisibles, factory, `form_buttons`). |
+| `examples/generated/`                          | Salidas de ejemplo del generador (`server_form.json`, `SkyWarsForm.json`). |
 
 ## Usar el agente
 
@@ -76,26 +77,34 @@ Instalación:
 
 ## Generador visual de custom forms (HTML)
 
-`tools/jsonui-form-generator.html` es una página **autónoma (offline)** para diseñar
-un custom form y **descargar su `.json` de JSON-UI** ya listo. Ábrela con doble clic
-en cualquier navegador.
+`tools/jsonui-form-generator.html` es una página **100% autónoma (offline, sin
+dependencias)**: ábrela con doble clic en cualquier navegador. Diseña **varios
+forms** con vista previa en vivo y **exporta un `server_form.json` completo** que usa
+el patrón real de servidores tipo Hive (ver `docs/hive-server-form-pattern.md`).
 
-Qué hace:
+Qué genera:
 
-- Defines un **marcador de título** (el texto que tu script pone en `.title()`); el
-  form personalizado solo se activa cuando el título lo contiene.
-- **Añades / quitas** elementos: imágenes, **fondo** (imagen 100%) y textos (labels),
-  cada uno con textura, tamaño, `anchor`, `offset` y `layer`.
-- Usa la técnica de **factory + binding por título** de la wiki, con nombres únicos
-  por form (`cf_<id>_…`), así puedes tener **varios custom forms a la vez sin tocar
-  el `server_form.json` original** — cada form es su propio archivo.
-- Opción "Ocultar el formulario original" para reemplazo total en vez de overlay.
+- Un `server_form.json` con un `server_form_factory` → **panel conmutador** que
+  enruta cada form por un **flag de glifo invisible** (`§m§a`, `§m§b`, …) en el título.
+- El **formulario vanilla como fallback** (cuando el título no lleva ningún flag).
+- Los **botones reales** del script (colección `form_buttons`) re-dibujados, más la
+  **descripción** (`#form_text`) y tus **imágenes / fondo / textos** posicionados por
+  `anchor`/`offset`/`layer`.
+- Además, un `forms.js` con la función para abrir cada form (ya concatena su flag).
+- Solo depende de namespaces **vanilla** (`common`), así que funciona sin packs de terceros.
+
+Por elemento puedes cargar una **imagen local solo para previsualizar** (no se
+exporta). Añades/quitas forms y elementos en vivo.
 
 Uso del archivo generado:
 
-1. Pon el `.json` descargado (p. ej. `SkyWarsForm.json`) en `resource_pack/ui/`.
-2. Regístralo en `ui/_ui_defs.json`: `{ "ui_defs": [ "ui/SkyWarsForm.json" ] }`.
-3. Coloca las texturas referenciadas en su ruta (`textures/ui/...`).
+1. Pon el `server_form.json` descargado en `resource_pack/ui/server_form.json`
+   (sobrescribe el vanilla; **no** necesita `_ui_defs.json`).
+2. Coloca las texturas que referencies en su ruta (`textures/ui/...`).
+3. En tu Behavior Pack, abre cada form con `.title("..." + FLAG.<id>)` (ver el `forms.js`).
 
-En `examples/generated/SkyWarsForm.json` tienes una salida de ejemplo
-(fondo + banner + texto) para ver el formato resultante.
+En `examples/generated/` tienes salidas de ejemplo (`server_form.json` con dos forms,
+y `SkyWarsForm.json`).
+
+> JSON-UI es sensible a la versión del juego y no se puede testear fuera del cliente:
+> los `offset`/`size` del layout pueden necesitar ajuste fino dentro de Minecraft.

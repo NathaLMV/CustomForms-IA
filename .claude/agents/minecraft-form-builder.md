@@ -177,12 +177,34 @@ Claves:
   el `size`/`offset` casi siempre necesitan ajuste fino dentro del juego.
 - Las texturas van sin extensión: `textures/ui/mi_banner`.
 
+### Patrón "switching server form" (estilo Hive) — múltiples layouts
+
+Servidores grandes (Hive) muestran **varios layouts personalizados** reusando el
+mismo server form, enrutando por un **flag de glifo invisible en el título**
+(`§m§a`, `§m§b`, …). El `server_form.json` reemplaza la pantalla con un
+`server_form_factory` (tipo `factory`) cuyo `long_form` apunta a un **panel
+conmutador** que contiene el form vanilla (visible si NO hay flag) + N paneles
+personalizados (cada uno visible cuando su flag está presente):
+
+```jsonc
+"source_property_name": "(not ((#title_text - $flag_a) = #title_text))"   // flag presente
+"source_property_name": "(((#title_text - $flag_a) = #title_text) and ...)" // sin ningún flag -> vanilla
+```
+
+Como el panel oculta el form vanilla, **re-dibuja los botones** del script desde la
+colección `form_buttons` con `button_list_factory` (`#form_button_text`,
+`#form_button_texture`); el cuerpo está en `#form_text`. El script solo concatena el
+flag: `.title("MI TÍTULO" + "§m§a")`.
+
+Guía completa en `docs/hive-server-form-pattern.md`.
+
 ### Generador visual
 
-El repo incluye `tools/jsonui-form-generator.html`: una página offline que exporta
-el `.json` de JSON-UI de un custom form (factory + binding por título, nombres únicos
-`cf_<id>_…`, soporta imágenes/fondo/labels). Úsalo o replícalo cuando el usuario
-quiera varios custom forms sin tocar el `server_form.json` original.
+El repo incluye `tools/jsonui-form-generator.html` (offline, sin dependencias): diseña
+varios forms con vista previa en vivo y **exporta un `server_form.json` completo con
+ese patrón** (factory + flags invisibles + fallback vanilla + botones reales +
+fondo/imágenes/textos) más el `forms.js` con el flag correcto por form. Solo depende
+de namespaces vanilla (`common`). Úsalo o replícalo cuando pidan varios layouts.
 
 ## Formato de entrega
 

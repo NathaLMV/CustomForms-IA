@@ -3,133 +3,114 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Generador JSON-UI · Custom Server Forms (Bedrock)</title>
+<title>Generador server_form.json · Custom Server Forms (Bedrock, estilo Hive)</title>
 <style>
-  :root {
-    --bg: #14161c; --panel: #1e2129; --panel2: #262a34; --line: #353a47;
-    --txt: #e6e8ee; --muted: #9aa3b2; --accent: #6ad36a; --accent2: #d36ad3;
-  }
+  :root { --bg:#14161c; --panel:#1e2129; --panel2:#262a34; --line:#353a47;
+    --txt:#e6e8ee; --muted:#9aa3b2; --accent:#6ad36a; --accent2:#d36ad3; }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--txt);
-    font: 14px/1.5 system-ui, "Segoe UI", Roboto, sans-serif; }
-  header { padding: 16px 20px; border-bottom: 1px solid var(--line);
-    background: linear-gradient(90deg,#1b1d24,#222530); }
-  header h1 { margin: 0; font-size: 18px; }
-  header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
-  .wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 16px 20px; align-items: start; }
-  @media (max-width: 1000px) { .wrap { grid-template-columns: 1fr; } }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
-  .card h2 { margin: 0 0 10px; font-size: 14px; color: var(--accent); }
-  label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 3px; }
-  input, select { width: 100%; background: var(--panel2); color: var(--txt);
-    border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: inherit; }
-  input[type="checkbox"] { width: auto; }
-  input[type="file"] { padding: 4px; font-size: 11px; }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .chk { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
-  .chk label { margin: 0; color: var(--txt); }
-  button { cursor: pointer; border: 0; border-radius: 7px; padding: 9px 14px; font: inherit; font-weight: 600; }
-  .btn-primary { background: var(--accent); color: #06210a; }
-  .btn-2 { background: var(--accent2); color: #21062a; }
-  .btn-ghost { background: var(--panel2); color: var(--txt); border: 1px solid var(--line); }
-  .btn-danger { background: #3a2630; color: #ff9a9a; border: 1px solid #5a2f3f; }
-  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-  .el { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-top: 10px; }
-  .el-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .el-head strong { font-size: 13px; }
-  pre { background: #0d0f14; border: 1px solid var(--line); border-radius: 8px;
-    padding: 14px; overflow: auto; max-height: 420px; font-size: 12px; margin: 0; white-space: pre; }
-  .hint { color: var(--muted); font-size: 11px; margin-top: 6px; }
-
-  /* ---- Vista previa ---- */
-  #stage { position: relative; width: 100%; max-width: 460px; aspect-ratio: 16 / 11;
-    margin: 0 auto; border-radius: 8px; overflow: hidden;
-    background:
-      repeating-linear-gradient(45deg,#2a2233 0 18px,#2f2638 18px 36px);
-    border: 1px solid #000; box-shadow: 0 6px 24px rgba(0,0,0,.5); }
-  #formBox { position: absolute; inset: 8% 22%; background: rgba(18,18,22,.94);
-    border: 2px solid #0a0a0c; border-radius: 4px; overflow: hidden; }
-  #fTitle { color: #ffd84d; font-weight: 700; text-align: center; padding: 8px 6px 4px;
-    text-shadow: 1px 1px 0 #000; font-size: 13px; }
-  #fBody { color: #9fd0ff; text-align: center; padding: 0 10px 8px; font-size: 11px;
-    text-shadow: 1px 1px 0 #000; }
-  .fbtn { background: #4f5666; border: 2px solid #2c313c; color: #fff; text-align: center;
-    margin: 4px 10px; padding: 6px; border-radius: 2px; font-size: 11px; text-shadow: 1px 1px 0 #000; }
-  .ov { position: absolute; pointer-events: none; }
-  .ov-img { background-size: cover; background-position: center;
-    border: 1px dashed rgba(106,211,106,.7); display: flex; align-items: center; justify-content: center;
-    color: #6ad36a; font-size: 9px; text-align: center; overflow: hidden; }
-  .ov-img.has-src { border-style: solid; border-color: transparent; }
-  .ov-label { white-space: nowrap; text-shadow: 1px 1px 0 #000; font-size: 12px; }
-  .stage-note { text-align: center; color: var(--muted); font-size: 11px; margin-top: 6px; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+    font:14px/1.5 system-ui,"Segoe UI",Roboto,sans-serif; }
+  header { padding:14px 20px; border-bottom:1px solid var(--line);
+    background:linear-gradient(90deg,#1b1d24,#222530); }
+  header h1 { margin:0; font-size:17px; }
+  header p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+  .wrap { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:16px 20px; align-items:start; }
+  @media (max-width:1050px){ .wrap{ grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:16px; }
+  .card h2 { margin:0 0 10px; font-size:14px; color:var(--accent); }
+  label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+  input, select { width:100%; background:var(--panel2); color:var(--txt);
+    border:1px solid var(--line); border-radius:6px; padding:7px 9px; font:inherit; }
+  input[type=checkbox]{ width:auto; } input[type=file]{ padding:4px; font-size:11px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .chk { display:flex; align-items:center; gap:8px; margin-top:10px; }
+  .chk label { margin:0; color:var(--txt); }
+  button { cursor:pointer; border:0; border-radius:7px; padding:8px 13px; font:inherit; font-weight:600; }
+  .btn-primary{ background:var(--accent); color:#06210a; } .btn-2{ background:var(--accent2); color:#21062a; }
+  .btn-ghost{ background:var(--panel2); color:var(--txt); border:1px solid var(--line); }
+  .btn-danger{ background:#3a2630; color:#ff9a9a; border:1px solid #5a2f3f; }
+  .toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tab{ background:var(--panel2); border:1px solid var(--line); color:var(--txt); }
+  .tab.active{ background:var(--accent); color:#06210a; border-color:var(--accent); }
+  .el{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:12px; margin-top:10px; }
+  .el-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .flagbox{ font-family:monospace; background:#0d0f14; border:1px solid var(--line); border-radius:6px;
+    padding:6px 9px; color:var(--accent); display:inline-block; }
+  pre{ background:#0d0f14; border:1px solid var(--line); border-radius:8px; padding:14px;
+    overflow:auto; max-height:380px; font-size:12px; margin:0; white-space:pre; }
+  .hint{ color:var(--muted); font-size:11px; margin-top:6px; }
+  /* preview */
+  #stage{ position:relative; width:100%; max-width:470px; aspect-ratio:16/11; margin:0 auto;
+    border-radius:8px; overflow:hidden; border:1px solid #000; box-shadow:0 6px 24px rgba(0,0,0,.5);
+    background:repeating-linear-gradient(45deg,#2a2233 0 18px,#2f2638 18px 36px); }
+  #formBox{ position:absolute; inset:8% 20%; background:rgba(14,14,18,.92);
+    border:2px solid #0a0a0c; border-radius:4px; overflow:hidden; }
+  .ov{ position:absolute; pointer-events:none; }
+  .ov-img{ background-size:cover; background-position:center; border:1px dashed rgba(106,211,106,.6);
+    display:flex; align-items:center; justify-content:center; color:#6ad36a; font-size:9px; text-align:center; overflow:hidden; }
+  .ov-img.has-src{ border-color:transparent; }
+  .ov-label{ white-space:nowrap; text-shadow:1px 1px 0 #000; }
+  .pv-title{ color:#fff; font-weight:800; text-align:center; text-shadow:1px 1px 0 #000; }
+  .pv-desc{ color:#5cc0ff; text-align:center; font-size:11px; text-shadow:1px 1px 0 #000; }
+  .pv-btn{ background:#6a7180; border:1px solid #2c313c; color:#fff; text-align:center;
+    padding:5px; border-radius:2px; font-size:11px; text-shadow:1px 1px 0 #000; margin-bottom:4px; }
+  .stage-note{ text-align:center; color:var(--muted); font-size:11px; margin-top:6px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Generador JSON-UI · Custom Server Forms (Bedrock)</h1>
-  <p>Diseña un formulario, <b>míralo en vivo</b> y exporta su <code>.json</code> de JSON-UI (factory + binding por título).
-     Varios forms sin tocar el <code>server_form.json</code> original.
-     Basado en la técnica de <span style="color:var(--accent)">wiki.bedrock.dev/json-ui/modifying-server-forms</span>.</p>
+  <h1>Generador <code>server_form.json</code> · estilo Hive</h1>
+  <p>Diseña varios custom forms y exporta un <code>server_form.json</code> con factory + flags de glifo invisibles
+     (<code>§m§a</code>…), forma vanilla como fallback, botones reales (<code>form_buttons</code>) y tus imágenes/fondos/textos.
+     Solo depende de namespaces vanilla (<code>common</code>). Técnica observada en la UI real de Hive.</p>
 </header>
 
 <div class="wrap">
-  <!-- Columna de configuración -->
+  <!-- IZQUIERDA: configuración -->
   <div>
     <div class="card">
-      <h2>1 · Datos del formulario</h2>
-      <label>Nombre / ID (slug, único por form)</label>
-      <input id="formId" value="skywars" placeholder="ej. skywars" />
-      <label>Marcador de título a detectar (#title_text contiene…)</label>
-      <input id="marker" value="JUGAR SKYWARS" placeholder="texto que el script pone en el título" />
-      <div class="hint">Los elementos solo aparecen cuando el título del form contiene este texto (subcadena, sin códigos §).</div>
-      <div class="chk">
-        <input type="checkbox" id="hideVanilla" />
-        <label for="hideVanilla">Ocultar el formulario original cuando coincida (reemplazo total)</label>
-      </div>
-      <label>Nombre del archivo a descargar</label>
-      <input id="fileName" value="SkyWarsForm.json" />
-    </div>
-
-    <div class="card">
-      <h2>2 · Vista previa del form base (solo para previsualizar)</h2>
-      <label>Título</label>
-      <input id="pvTitle" value="JUGAR SKYWARS" />
-      <label>Comentario / cuerpo</label>
-      <input id="pvBody" value="¡Elige tu modo de juego!" />
-      <label>Botones (separados por coma)</label>
-      <input id="pvButtons" value="Solitario, Dúos, Escuadrones, MEGA LTM" />
-      <div class="chk"><input type="checkbox" id="pvShowBase" checked><label>Mostrar formulario base bajo los elementos</label></div>
-      <div class="hint">Estos textos no se exportan: vienen de tu script (.title/.body/.button). Solo sirven para ver el conjunto.</div>
-    </div>
-
-    <div class="card">
-      <h2>3 · Elementos (añadir / quitar)</h2>
-      <div id="elements"></div>
+      <h2>1 · Formularios</h2>
+      <div class="tabs" id="tabs"></div>
       <div class="toolbar">
-        <button class="btn-ghost" onclick="addEl('image')">+ Imagen</button>
-        <button class="btn-ghost" onclick="addEl('background')">+ Fondo (imagen 100%)</button>
-        <button class="btn-ghost" onclick="addEl('label')">+ Texto (label)</button>
+        <button class="btn-ghost" onclick="addForm()">+ Nuevo form</button>
+        <button class="btn-danger" onclick="removeForm()">Eliminar form activo</button>
       </div>
+      <div class="hint">Cada form recibe un <b>flag invisible</b> que tu script añade al título para activarlo.</div>
     </div>
+
+    <div class="card" id="formCard"><!-- form activo --></div>
+
+    <div class="card" id="elemCard"><!-- elementos --></div>
   </div>
 
-  <!-- Columna de vista previa + JSON -->
+  <!-- DERECHA: preview + salidas -->
   <div>
     <div class="card">
-      <h2>Vista previa</h2>
+      <h2>Vista previa (form activo)</h2>
       <div id="stage"></div>
-      <div class="stage-note">Aproximación. Las imágenes se ven si cargas una local en el elemento; si no, aparece su ruta como marcador.</div>
+      <div class="stage-note">Aproximación. Carga una imagen local por elemento para verla; si no, se muestra su ruta.</div>
     </div>
 
     <div class="card">
-      <h2>Resultado JSON-UI</h2>
+      <h2>server_form.json</h2>
       <div class="toolbar" style="margin-top:0;margin-bottom:10px">
-        <button class="btn-primary" onclick="download()">⬇ Descargar .json</button>
-        <button class="btn-2" onclick="copyJson()">⧉ Copiar</button>
+        <button class="btn-primary" onclick="dl('json')">⬇ Descargar server_form.json</button>
+        <button class="btn-2" onclick="cp('outJson')">⧉ Copiar</button>
       </div>
-      <pre id="out"></pre>
-      <div class="hint">Coloca el archivo en <code>resource_pack/ui/</code> y regístralo en <code>ui/_ui_defs.json</code>.
-        JSON-UI es sensible a la versión: <code>size</code>/<code>offset</code> suelen necesitar ajuste fino en el juego.</div>
+      <pre id="outJson"></pre>
+      <div class="hint">Va en <code>resource_pack/ui/server_form.json</code>. No requiere <code>_ui_defs.json</code>
+        (sobrescribe el archivo vanilla). JSON-UI es sensible a la versión: <code>offset</code>/<code>size</code> pueden requerir ajuste.</div>
+    </div>
+
+    <div class="card">
+      <h2>Script (cómo abrir cada form)</h2>
+      <div class="toolbar" style="margin-top:0;margin-bottom:10px">
+        <button class="btn-2" onclick="cp('outJs')">⧉ Copiar</button>
+        <button class="btn-ghost" onclick="dl('js')">⬇ forms.js</button>
+      </div>
+      <pre id="outJs"></pre>
     </div>
   </div>
 </div>
@@ -137,221 +118,292 @@
 <script>
 const ANCHORS = ["top_left","top_middle","top_right","left_middle","center","right_middle",
                  "bottom_left","bottom_middle","bottom_right"];
-let elements = [];
+// Flags = combinaciones de glifos invisibles, igual que Hive (§ = §)
+const FLAG_POOL = ["a","b","c","d","e","f","0","1","2","3","4","5","6","7","8","9"]
+  .map(ch => ({ ch, flag: "§m§" + ch }));
+
+let forms = [];
+let active = null;
 let uid = 0;
 
-function addEl(kind) {
+function num(v, d) { const n = Number(v); return isNaN(n) ? d : n; }
+function slug(s){ return (s||"x").toLowerCase().replace(/[^a-z0-9_]+/g,"_").replace(/^_+|_+$/g,"")||"x"; }
+function hexToRgb(hex){ const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex||"#ffffff");
+  if(!m) return [1,1,1]; return [parseInt(m[1],16)/255,parseInt(m[2],16)/255,parseInt(m[3],16)/255].map(n=>+n.toFixed(3)); }
+function clean(t){ return String(t||"").replace(/§./g,""); }
+
+function addForm(){
   uid++;
-  if (kind === "image" || kind === "background") {
-    elements.push({
-      id: uid, type: "image", name: (kind === "background" ? "fondo" : "imagen") + uid,
-      texture: "textures/ui/mi_textura",
-      fill: kind === "background", w: 290, h: 84,
-      anchor_from: kind === "background" ? "center" : "top_middle",
-      anchor_to: kind === "background" ? "center" : "top_middle",
-      ox: 0, oy: kind === "background" ? 0 : 30,
-      layer: kind === "background" ? 1 : 20, _src: null,
-    });
-  } else {
-    elements.push({
-      id: uid, type: "label", name: "texto" + uid, text: "Mi texto §lpersonalizado",
-      color: "#ffffff", anchor_from: "top_middle", anchor_to: "top_middle",
-      ox: 0, oy: 14, layer: 20,
-    });
-  }
+  const idx = forms.length;
+  const f = {
+    uid, id: "form" + uid, name: "Form " + (idx+1),
+    flag: (FLAG_POOL[idx] || FLAG_POOL[FLAG_POOL.length-1]).flag,
+    pvTitle: "JUGAR SKYWARS", pvBody: "¡Elige tu modo de juego!",
+    pvButtons: "Solitario, Dúos, Escuadrones, MEGA LTM",
+    titleOn: true, titleOffsetY: 10, titleScale: 1.5,
+    descOn: true, descOffsetY: 34,
+    btnOn: true, btnWidth: 200, btnOffsetY: 70,
+    images: [], labels: [],
+  };
+  forms.push(f); active = f.uid; reassignFlags(); render();
+}
+function removeForm(){ forms = forms.filter(f=>f.uid!==active); if(forms.length) active=forms[forms.length-1].uid; reassignFlags(); render(); }
+function reassignFlags(){ forms.forEach((f,i)=>{ f.flag = (FLAG_POOL[i]||FLAG_POOL[FLAG_POOL.length-1]).flag; }); }
+function getActive(){ return forms.find(f=>f.uid===active); }
+
+function setF(field, value){ const f=getActive(); if(!f) return; f[field]=value; if(field==="descOn"||field==="btnOn"||field==="titleOn") render(); else refresh(); }
+function addEl(kind){
+  const f=getActive(); if(!f) return; uid++;
+  if(kind==="label"){ f.labels.push({ id:uid, name:"texto"+uid, text:"§lMi texto", color:"#ffffff",
+    anchor_from:"top_middle", anchor_to:"top_middle", ox:0, oy:120, layer:20 }); }
+  else { f.images.push({ id:uid, name:(kind==="bg"?"fondo":"img")+uid, texture:"textures/ui/mi_textura",
+    fill:kind==="bg", w:280, h:70, anchor_from:kind==="bg"?"center":"top_middle",
+    anchor_to:kind==="bg"?"center":"top_middle", ox:0, oy:kind==="bg"?0:40, layer:kind==="bg"?1:15, _src:null }); }
   render();
 }
+function removeEl(listType, id){ const f=getActive(); if(!f) return; f[listType]=f[listType].filter(e=>e.id!==id); render(); }
+function updEl(listType, id, key, value){ const f=getActive(); if(!f) return;
+  const el=f[listType].find(e=>e.id===id); if(!el) return; el[key]=value;
+  if(key==="fill") render(); else refresh(); }
+function loadImg(id, input){ const f=getActive(); if(!f) return; const el=f.images.find(e=>e.id===id);
+  const file=input.files&&input.files[0]; if(!el||!file) return;
+  const r=new FileReader(); r.onload=()=>{ el._src=r.result; drawPreview(); }; r.readAsDataURL(file); }
 
-function removeEl(id) { elements = elements.filter(e => e.id !== id); render(); }
+function inp(value, handler, type){ const v=type==="checkbox"?(value?"checked":""):`value="${String(value).replace(/"/g,'&quot;')}"`;
+  if(type==="checkbox") return `<input type="checkbox" ${v} onchange="${handler}(this.checked)">`;
+  const cast = type==="number" ? "Number(this.value)" : "this.value";
+  return `<input type="${type||"text"}" ${v} oninput="${handler}(${cast})">`; }
+function sel(value, handler){ return `<select onchange="${handler}(this.value)">${ANCHORS.map(a=>`<option ${a===value?"selected":""}>${a}</option>`).join("")}</select>`; }
 
-function field(el, key, label, type) {
-  const v = el[key];
-  const val = type === "checkbox" ? (v ? "checked" : "") : `value="${String(v).replace(/"/g,'&quot;')}"`;
-  if (type === "select") {
-    const opts = ANCHORS.map(a => `<option ${a===v?"selected":""}>${a}</option>`).join("");
-    return `<label>${label}</label><select onchange="upd(${el.id},'${key}',this.value)">${opts}</select>`;
-  }
-  if (type === "checkbox")
-    return `<div class="chk"><input type="checkbox" ${val} onchange="upd(${el.id},'${key}',this.checked)"><label>${label}</label></div>`;
-  const onkey = type === "number" ? `upd(${el.id},'${key}',Number(this.value))` : `upd(${el.id},'${key}',this.value)`;
-  return `<label>${label}</label><input type="${type||'text'}" ${val} oninput="${onkey}">`;
+function render(){
+  // tabs
+  document.getElementById("tabs").innerHTML = forms.map(f=>
+    `<button class="tab ${f.uid===active?"active":""}" onclick="active=${f.uid};render()">${f.name} · ${f.flag.replace(/§/g,"§")}</button>`).join("") || "<span class='hint'>Sin formularios. Crea uno.</span>";
+
+  const f=getActive();
+  const fc=document.getElementById("formCard"), ec=document.getElementById("elemCard");
+  if(!f){ fc.innerHTML=""; ec.innerHTML=""; refresh(); return; }
+
+  fc.innerHTML = `<h2>2 · Form activo: ${f.name}</h2>
+    <label>Nombre / ID (slug, único)</label>${inp(f.id, "setF.bind(null,'id')")}
+    <label>Nombre visible (etiqueta)</label>${inp(f.name, "setF.bind(null,'name')")}
+    <label>Flag asignado (invisible en el juego, va al final del título)</label>
+    <div class="flagbox">${f.flag.replace(/§/g,"§")}</div>
+    <hr style="border-color:var(--line);margin:12px 0">
+    <label>Vista previa — Título</label>${inp(f.pvTitle, "setF.bind(null,'pvTitle')")}
+    <label>Vista previa — Comentario / cuerpo (#form_text)</label>${inp(f.pvBody, "setF.bind(null,'pvBody')")}
+    <label>Vista previa — Botones (coma)</label>${inp(f.pvButtons, "setF.bind(null,'pvButtons')")}
+    <div class="hint">Título y botones reales vienen de tu script (.title/.body/.button); aquí solo se previsualizan.</div>
+    <hr style="border-color:var(--line);margin:12px 0">
+    <div class="chk">${inp(f.titleOn,"setF.bind(null,'titleOn')","checkbox")}<label>Mostrar título</label></div>
+    <div class="row">${rowField("Título offset Y","titleOffsetY",f.titleOffsetY,"number")}${rowField("Título escala","titleScale",f.titleScale,"number")}</div>
+    <div class="chk">${inp(f.descOn,"setF.bind(null,'descOn')","checkbox")}<label>Mostrar descripción (#form_text)</label></div>
+    ${f.descOn?`<label>Descripción offset Y</label>${inp(f.descOffsetY,"setF.bind(null,'descOffsetY')","number")}`:""}
+    <div class="chk">${inp(f.btnOn,"setF.bind(null,'btnOn')","checkbox")}<label>Mostrar botones (form_buttons)</label></div>
+    ${f.btnOn?`<div class="row">${rowField("Botones ancho","btnWidth",f.btnWidth,"number")}${rowField("Botones offset Y","btnOffsetY",f.btnOffsetY,"number")}</div>`:""}`;
+
+  ec.innerHTML = `<h2>3 · Elementos del form</h2><div id="els"></div>
+    <div class="toolbar">
+      <button class="btn-ghost" onclick="addEl('img')">+ Imagen</button>
+      <button class="btn-ghost" onclick="addEl('bg')">+ Fondo (100%)</button>
+      <button class="btn-ghost" onclick="addEl('label')">+ Texto</button>
+    </div>`;
+  const els=document.getElementById("els");
+  let html="";
+  f.images.forEach(el=>{ html += elCard("images", el, "🖼 Imagen",
+    `<label>Ruta de textura</label>${inp(el.texture,`updEl.bind(null,'images',${el.id},'texture')`)}
+     <div class="chk">${inp(el.fill,`updEl.bind(null,'images',${el.id},'fill')`,"checkbox")}<label>Ocupar todo (fondo)</label></div>
+     ${el.fill?"":`<div class="row"><div><label>ancho</label>${inp(el.w,`updEl.bind(null,'images',${el.id},'w')`,"number")}</div><div><label>alto</label>${inp(el.h,`updEl.bind(null,'images',${el.id},'h')`,"number")}</div></div>`}
+     ${anchorBlock("images",el)}
+     <label>Imagen local para previsualizar (no se exporta)</label>
+     <input type="file" accept="image/*" onchange="loadImg(${el.id},this)">`); });
+  f.labels.forEach(el=>{ html += elCard("labels", el, "🔤 Texto",
+    `<label>Texto (admite §)</label>${inp(el.text,`updEl.bind(null,'labels',${el.id},'text')`)}
+     <label>Color</label>${inp(el.color,`updEl.bind(null,'labels',${el.id},'color')`,"color")}
+     ${anchorBlock("labels",el)}`); });
+  els.innerHTML = html || "<div class='hint'>Sin elementos. Añade imágenes, fondo o textos.</div>";
+
+  refresh();
 }
+function rowField(label,key,val,type){ return `<div><label>${label}</label>${inp(val,`setF.bind(null,'${key}')`,type)}</div>`; }
+function anchorBlock(listType, el){ return `<div class="row"><div><label>anchor_from</label>${sel(el.anchor_from,`updEl.bind(null,'${listType}',${el.id},'anchor_from')`)}</div>
+  <div><label>anchor_to</label>${sel(el.anchor_to,`updEl.bind(null,'${listType}',${el.id},'anchor_to')`)}</div></div>
+  <div class="row3"><div><label>offset X</label>${inp(el.ox,`updEl.bind(null,'${listType}',${el.id},'ox')`,"number")}</div>
+  <div><label>offset Y</label>${inp(el.oy,`updEl.bind(null,'${listType}',${el.id},'oy')`,"number")}</div>
+  <div><label>layer</label>${inp(el.layer,`updEl.bind(null,'${listType}',${el.id},'layer')`,"number")}</div></div>`; }
+function elCard(listType, el, title, body){ return `<div class="el"><div class="el-head"><strong>${title} · ${el.name}</strong>
+  <button class="btn-danger" onclick="removeEl('${listType}',${el.id})">Quitar</button></div>
+  <label>Nombre del control</label>${inp(el.name,`updEl.bind(null,'${listType}',${el.id},'name')`)}${body}</div>`; }
 
-function upd(id, key, value) {
-  const el = elements.find(e => e.id === id);
-  if (!el) return;
-  el[key] = value;
-  if (key === "fill" || key === "type") render(); else { generate(); drawPreview(); }
-}
-
-function loadImg(id, input) {
-  const el = elements.find(e => e.id === id);
-  const f = input.files && input.files[0];
-  if (!el || !f) return;
-  const r = new FileReader();
-  r.onload = () => { el._src = r.result; drawPreview(); };
-  r.readAsDataURL(f);
-}
-
-function render() {
-  const c = document.getElementById("elements");
-  c.innerHTML = elements.map(el => {
-    let body = field(el, "name", "Nombre del control", "text") +
-               field(el, "anchor_from", "anchor_from", "select") +
-               field(el, "anchor_to", "anchor_to", "select") +
-               `<div class="row">${field(el,"ox","offset X","number")}${field(el,"oy","offset Y","number")}</div>` +
-               field(el, "layer", "layer (z-order)", "number");
-    if (el.type === "image") {
-      body = field(el, "texture", "Ruta de textura (sin extensión)", "text") +
-             field(el, "fill", "Ocupar todo el form (fondo 100%)", "checkbox") +
-             (el.fill ? "" : `<div class="row">${field(el,"w","ancho (px)","number")}${field(el,"h","alto (px)","number")}</div>`) +
-             body +
-             `<label>Imagen local para previsualizar (no se exporta)</label>
-              <input type="file" accept="image/*" onchange="loadImg(${el.id}, this)">`;
-    } else {
-      body = field(el, "text", "Texto (admite §)", "text") +
-             field(el, "color", "Color", "color") + body;
-    }
-    return `<div class="el"><div class="el-head"><strong>${el.type === "image" ? "🖼 Imagen" : "🔤 Texto"} · ${el.name}</strong>
-      <button class="btn-danger" onclick="removeEl(${el.id})">Quitar</button></div>${body}</div>`;
-  }).join("");
-  ["formId","marker","hideVanilla","fileName","pvTitle","pvBody","pvButtons","pvShowBase"].forEach(id => {
-    const e = document.getElementById(id);
-    if (e && !e._bound) { e.addEventListener("input", () => { generate(); drawPreview(); }); e._bound = true; }
-  });
-  generate(); drawPreview();
-}
-
-function slug(s) { return (s || "form").toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "form"; }
-function hexToRgb(hex) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "#ffffff");
-  if (!m) return [1, 1, 1];
-  return [parseInt(m[1],16)/255, parseInt(m[2],16)/255, parseInt(m[3],16)/255].map(n => +n.toFixed(3));
-}
-// quita códigos § para mostrar texto limpio en el preview
-function clean(t) { return String(t || "").replace(/§./g, ""); }
-
-function generate() {
-  const id = slug(document.getElementById("formId").value);
-  const marker = document.getElementById("marker").value;
-  const hideVanilla = document.getElementById("hideVanilla").checked;
-  const panelName = `cf_${id}_panel`, factoryName = `cf_${id}_factory`;
+/* ---------- Exportación server_form.json ---------- */
+function buildServerForm(){
   const out = { namespace: "server_form" };
+  out["third_party_server_screen@common.base_screen"] = {
+    "$screen_content": "server_form.cf_main_screen_content",
+    button_mappings: [{ from_button_id:"button.menu_cancel", to_button_id:"button.menu_exit", mapping_type:"global" }]
+  };
+  out["cf_main_screen_content"] = { type:"panel", size:["100%","100%"], controls:[
+    { server_form_factory: { type:"factory", control_ids:{
+      long_form:"@server_form.cf_switching_long_form", custom_form:"@server_form.custom_form" } } }
+  ]};
 
-  out.main_screen_content = { modifications: [
-    { array_name: "controls", operation: "insert_back", value: [
-      { [factoryName]: { type: "panel", factory: { name: "server_form_factory",
-        control_ids: { long_form: `@server_form.${panelName}` } } } }
-    ] }
-  ] };
-
-  const controls = [], defs = {};
-  elements.forEach(el => {
-    const cname = slug(el.name) + "_" + el.id, defKey = `cf_${id}_${cname}`;
-    controls.push({ [`${cname}@server_form.${defKey}`]: {} });
-    if (el.type === "image") {
-      defs[defKey] = { type: "image", texture: el.texture,
-        size: el.fill ? ["100%", "100%"] : [Number(el.w), Number(el.h)],
-        anchor_from: el.anchor_from, anchor_to: el.anchor_to,
-        offset: [Number(el.ox), Number(el.oy)], layer: Number(el.layer) };
-    } else {
-      defs[defKey] = { type: "label", text: el.text, color: hexToRgb(el.color),
-        anchor_from: el.anchor_from, anchor_to: el.anchor_to,
-        offset: [Number(el.ox), Number(el.oy)], layer: Number(el.layer) };
-    }
+  const switcher = { type:"panel", size:["100%","100%"] };
+  forms.forEach(f=>{ switcher["$flag_"+slug(f.id)] = f.flag; });
+  const sc = [];
+  const allAbsent = forms.length
+    ? "(" + forms.map(f=>`((#title_text - $flag_${slug(f.id)}) = #title_text)`).join(" and ") + ")"
+    : null;
+  const vanilla = { enabled:false, visible:false, bindings:[
+    { binding_type:"global", binding_condition:"none", binding_name:"#title_text", binding_name_override:"#title_text" }
+  ]};
+  if(allAbsent){
+    vanilla.bindings.push({ source_property_name:allAbsent, binding_type:"view", target_property_name:"#visible" });
+    vanilla.bindings.push({ source_property_name:allAbsent, binding_type:"view", target_property_name:"#enabled" });
+  }
+  sc.push({ "vanilla@long_form": vanilla });
+  forms.forEach(f=>{
+    const present = `(not ((#title_text - $flag_${slug(f.id)}) = #title_text))`;
+    sc.push({ [`${slug(f.id)}@server_form.cf_${slug(f.id)}_panel`]: { enabled:false, visible:false, bindings:[
+      { binding_type:"global", binding_condition:"none", binding_name:"#title_text", binding_name_override:"#title_text" },
+      { source_property_name:present, binding_type:"view", target_property_name:"#visible" },
+      { source_property_name:present, binding_type:"view", target_property_name:"#enabled" } ] } });
   });
+  switcher.controls = sc;
+  out["cf_switching_long_form"] = switcher;
 
-  out[panelName] = { type: "panel", "$marker": marker,
-    bindings: [ { binding_name: "#title_text" },
-      { binding_type: "view", source_property_name: "(not ((#title_text - $marker) = #title_text))",
-        target_property_name: "#visible" } ],
-    controls };
-  Object.assign(out, defs);
-
-  if (hideVanilla) {
-    const safe = marker.replace(/'/g, "");
-    out.long_form = { modifications: [
-      { array_name: "bindings", operation: "insert_back", value: [
-        { binding_name: "#title_text" },
-        { binding_type: "view", source_property_name: `((#title_text - '${safe}') = #title_text)`,
-          target_property_name: "#visible" } ] } ] };
-  }
-  document.getElementById("out").textContent = JSON.stringify(out, null, 2);
+  forms.forEach(f=> buildPanel(out, f));
+  return out;
 }
 
-// Convierte un anchor en porcentajes [x,y] (0=izq/arriba, .5=medio, 1=der/abajo)
-function anchorPct(a) {
-  const x = a.includes("left") ? 0 : a.includes("right") ? 1 : 0.5;
-  const y = a.includes("top") ? 0 : a.includes("bottom") ? 1 : 0.5;
-  return [x, y];
+function buildPanel(out, f){
+  const id = slug(f.id), ctrls = [];
+
+  if(f.titleOn){
+    out[`cf_${id}_title`] = { type:"label", text:"#title_text", font_type:"MinecraftTen", color:"white",
+      anchor_from:"top_middle", anchor_to:"top_middle", offset:[0,num(f.titleOffsetY,10)],
+      font_scale_factor:num(f.titleScale,1.5), layer:6, shadow:true,
+      bindings:[{ binding_name:"#title_text", binding_type:"global" }] };
+    ctrls.push({ [`title@server_form.cf_${id}_title`]:{} });
+  }
+  if(f.descOn){
+    out[`cf_${id}_desc`] = { type:"label", text:"#form_text", color:[0.36,0.752,1],
+      anchor_from:"top_middle", anchor_to:"top_middle", offset:[0,num(f.descOffsetY,34)],
+      size:["80%","default"], text_alignment:"center", line_padding:2, layer:6, shadow:true };
+    ctrls.push({ [`desc@server_form.cf_${id}_desc`]:{} });
+  }
+  if(f.btnOn){
+    out[`cf_${id}_buttons`] = { type:"stack_panel", orientation:"vertical",
+      anchor_from:"top_middle", anchor_to:"top_middle", size:[num(f.btnWidth,200),"100%c"],
+      offset:[0,num(f.btnOffsetY,70)], layer:5,
+      factory:{ name:"button_list_factory", control_name:`server_form.cf_${id}_btn` },
+      collection_name:"form_buttons",
+      bindings:[{ binding_name:"#form_button_length", binding_name_override:"#collection_length" }] };
+    out[`cf_${id}_btn@common.button`] = { size:["100%",26], "$pressed_button_name":"button.form_button_click",
+      bindings:[{ binding_type:"collection_details", binding_collection_name:"form_buttons" }],
+      controls:[
+        { [`default@server_form.cf_${id}_btn_face`]:{ "$bg_tex":"textures/ui/button_borderless_light" } },
+        { [`hover@server_form.cf_${id}_btn_face`]:{ "$bg_tex":"textures/ui/button_borderless_lighthover" } },
+        { [`pressed@server_form.cf_${id}_btn_face`]:{ "$bg_tex":"textures/ui/button_borderless_light" } } ] };
+    out[`cf_${id}_btn_face`] = { type:"image", texture:"$bg_tex",
+      "$bg_tex|default":"textures/ui/button_borderless_light", nineslice_size:[4,4,4,4], tiled:false, size:["100%","100%"],
+      controls:[{ label:{ type:"label", text:"#form_button_text", color:[1,1,1], text_alignment:"center",
+        anchor_from:"center", anchor_to:"center", size:["100% - 8px","default"], layer:2,
+        bindings:[{ binding_type:"collection", binding_collection_name:"form_buttons",
+          binding_name:"#form_button_text", binding_name_override:"#form_button_text" }] } }] };
+    ctrls.push({ [`buttons@server_form.cf_${id}_buttons`]:{} });
+  }
+  f.images.forEach(el=>{ const cn=slug(el.name)+"_"+el.id, key=`cf_${id}_${cn}`;
+    out[key] = { type:"image", texture:el.texture, size: el.fill?["100%","100%"]:[num(el.w,100),num(el.h,40)],
+      anchor_from:el.anchor_from, anchor_to:el.anchor_to, offset:[num(el.ox,0),num(el.oy,0)],
+      layer:num(el.layer,1), keep_ratio:false };
+    ctrls.push({ [`${cn}@server_form.${key}`]:{} }); });
+  f.labels.forEach(el=>{ const cn=slug(el.name)+"_"+el.id, key=`cf_${id}_${cn}`;
+    out[key] = { type:"label", text:el.text, color:hexToRgb(el.color), anchor_from:el.anchor_from,
+      anchor_to:el.anchor_to, offset:[num(el.ox,0),num(el.oy,0)], layer:num(el.layer,20), shadow:true };
+    ctrls.push({ [`${cn}@server_form.${key}`]:{} }); });
+
+  out[`cf_${id}_panel`] = { type:"panel", size:["100%","100%"], controls:ctrls };
 }
 
-function drawPreview() {
-  const stage = document.getElementById("stage");
-  const showBase = document.getElementById("pvShowBase").checked;
-  const hideVanilla = document.getElementById("hideVanilla").checked;
-  stage.innerHTML = "";
+function buildScript(){
+  let s = 'import { ActionFormData } from "@minecraft/server-ui";\n\n';
+  s += '// Flags invisibles que enrutan cada form al layout JSON-UI (NO se ven en el juego).\n';
+  s += 'const FLAG = {\n';
+  forms.forEach(f=>{ s += `  ${slug(f.id)}: "\\u00a7m\\u00a7${f.flag.slice(-1)}", // ${f.name}\n`; });
+  s += '};\n\n';
+  forms.forEach(f=>{
+    const id=slug(f.id);
+    s += `// Abrir el form "${f.name}"\n`;
+    s += `export async function open_${id}(player) {\n`;
+    s += `  const form = new ActionFormData()\n`;
+    s += `    .title(${JSON.stringify(f.pvTitle||f.name)} + FLAG.${id})`;
+    if(f.pvBody) s += `\n    .body(${JSON.stringify(f.pvBody)})`;
+    (f.pvButtons||"").split(",").map(x=>x.trim()).filter(Boolean).forEach(b=>{ s += `\n    .button(${JSON.stringify(b)})`; });
+    s += `;\n\n  const r = await form.show(player);\n  if (r.canceled) return;\n  // r.selection -> índice del botón pulsado\n}\n\n`;
+  });
+  return s;
+}
 
-  // formulario base
-  const box = document.createElement("div");
-  box.id = "formBox";
-  if (showBase && !hideVanilla) {
-    const t = document.createElement("div"); t.id = "fTitle";
-    t.textContent = clean(document.getElementById("pvTitle").value) || "TÍTULO";
-    const b = document.createElement("div"); b.id = "fBody";
-    b.textContent = clean(document.getElementById("pvBody").value);
-    box.appendChild(t); box.appendChild(b);
-    (document.getElementById("pvButtons").value.split(",")).forEach(s => {
-      const txt = clean(s).trim(); if (!txt) return;
-      const d = document.createElement("div"); d.className = "fbtn"; d.textContent = txt; box.appendChild(d);
-    });
-  } else {
-    box.style.background = "rgba(18,18,22,.55)";
-    const n = document.createElement("div"); n.id = "fBody";
-    n.style.paddingTop = "14px"; n.textContent = "(form base oculto)"; box.appendChild(n);
-  }
-  stage.appendChild(box);
+function refresh(){
+  document.getElementById("outJson").textContent = JSON.stringify(buildServerForm(), null, 2);
+  document.getElementById("outJs").textContent = buildScript();
+  drawPreview();
+}
 
-  // elementos overlay (relativos al formBox), ordenados por layer
-  const sorted = [...elements].sort((a, b) => (a.layer || 0) - (b.layer || 0));
-  sorted.forEach(el => {
-    const d = document.createElement("div");
-    d.style.zIndex = String(el.layer || 0);
-    const [ax, ay] = anchorPct(el.anchor_to);
-    const [fx, fy] = anchorPct(el.anchor_from);
-    d.style.position = "absolute";
-    d.style.left = (ax * 100) + "%";
-    d.style.top = (ay * 100) + "%";
-    d.style.transform = `translate(calc(-${fx * 100}% + ${Number(el.ox)}px), calc(-${fy * 100}% + ${Number(el.oy)}px))`;
+/* ---------- Vista previa ---------- */
+function anchorPct(a){ const x=a.includes("left")?0:a.includes("right")?1:0.5; const y=a.includes("top")?0:a.includes("bottom")?1:0.5; return [x,y]; }
+function drawPreview(){
+  const stage=document.getElementById("stage"); stage.innerHTML="";
+  const box=document.createElement("div"); box.id="formBox"; stage.appendChild(box);
+  const f=getActive(); if(!f) return;
 
-    if (el.type === "image") {
-      d.className = "ov ov-img" + (el._src ? " has-src" : "");
-      if (el.fill) { d.style.left = "0"; d.style.top = "0"; d.style.transform = "none"; d.style.width = "100%"; d.style.height = "100%"; }
-      else { d.style.width = Number(el.w) + "px"; d.style.height = Number(el.h) + "px"; }
-      if (el._src) d.style.backgroundImage = `url(${el._src})`;
-      else d.textContent = el.texture;
-    } else {
-      d.className = "ov ov-label";
-      d.textContent = clean(el.text);
-      const c = hexToRgb(el.color).map(n => Math.round(n * 255));
-      d.style.color = `rgb(${c[0]},${c[1]},${c[2]})`;
-    }
+  const place=(d,el)=>{ const [ax,ay]=anchorPct(el.anchor_to), [fx,fy]=anchorPct(el.anchor_from);
+    d.style.position="absolute"; d.style.left=(ax*100)+"%"; d.style.top=(ay*100)+"%";
+    d.style.transform=`translate(calc(-${fx*100}% + ${num(el.ox,0)}px), calc(-${fy*100}% + ${num(el.oy,0)}px))`;
+    d.style.zIndex=String(num(el.layer,0)); };
+
+  // imagenes (incluye fondos)
+  [...f.images].sort((a,b)=>num(a.layer,0)-num(b.layer,0)).forEach(el=>{
+    const d=document.createElement("div"); d.className="ov ov-img"+(el._src?" has-src":"");
+    if(el.fill){ d.style.position="absolute"; d.style.inset="0"; d.style.width="100%"; d.style.height="100%"; d.style.zIndex=String(num(el.layer,0)); }
+    else { place(d,el); d.style.width=num(el.w,100)+"px"; d.style.height=num(el.h,40)+"px"; }
+    if(el._src) d.style.backgroundImage=`url(${el._src})`; else d.textContent=el.texture;
     box.appendChild(d);
   });
+  // título
+  if(f.titleOn){ const t=document.createElement("div"); t.className="pv-title ov";
+    t.style.left="50%"; t.style.top="0"; t.style.transform=`translate(-50%, ${num(f.titleOffsetY,10)}px)`;
+    t.style.fontSize=(11*num(f.titleScale,1.5))+"px"; t.style.zIndex="6";
+    t.textContent=clean(f.pvTitle)||"TÍTULO"; box.appendChild(t); }
+  // descripción
+  if(f.descOn){ const d=document.createElement("div"); d.className="pv-desc ov";
+    d.style.left="50%"; d.style.top="0"; d.style.width="80%"; d.style.transform=`translate(-50%, ${num(f.descOffsetY,34)}px)`;
+    d.style.zIndex="6"; d.textContent=clean(f.pvBody); box.appendChild(d); }
+  // botones
+  if(f.btnOn){ const wrap=document.createElement("div"); wrap.className="ov";
+    wrap.style.left="50%"; wrap.style.top="0"; wrap.style.width=num(f.btnWidth,200)+"px";
+    wrap.style.transform=`translate(-50%, ${num(f.btnOffsetY,70)}px)`; wrap.style.zIndex="5";
+    (f.pvButtons||"").split(",").map(s=>clean(s).trim()).filter(Boolean).forEach(b=>{
+      const x=document.createElement("div"); x.className="pv-btn"; x.textContent=b; wrap.appendChild(x); });
+    box.appendChild(wrap); }
+  // labels
+  f.labels.forEach(el=>{ const d=document.createElement("div"); d.className="ov ov-label";
+    place(d,el); const c=hexToRgb(el.color).map(n=>Math.round(n*255));
+    d.style.color=`rgb(${c[0]},${c[1]},${c[2]})`; d.textContent=clean(el.text); box.appendChild(d); });
 }
 
-function download() {
-  const name = (document.getElementById("fileName").value.trim() || "CustomForm.json");
-  const blob = new Blob([document.getElementById("out").textContent], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = name.endsWith(".json") ? name : name + ".json";
-  a.click(); URL.revokeObjectURL(a.href);
+/* ---------- Descarga / copia ---------- */
+function dl(kind){
+  const isJson = kind==="json";
+  const text = document.getElementById(isJson?"outJson":"outJs").textContent;
+  const name = isJson ? "server_form.json" : "forms.js";
+  const blob = new Blob([text], { type: isJson?"application/json":"text/javascript" });
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href);
 }
-function copyJson() { navigator.clipboard.writeText(document.getElementById("out").textContent); }
+function cp(id){ navigator.clipboard.writeText(document.getElementById(id).textContent); }
 
-// estado inicial de ejemplo
-addEl("image");
+// estado inicial
+addForm();
 </script>
 </body>
 </html>
