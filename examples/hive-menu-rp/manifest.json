@@ -1,0 +1,17 @@
+{
+  "format_version": 2,
+  "header": {
+    "name": "§dCustom Forms — JSON-UI Banner",
+    "description": "Añade un banner de imagen a los server forms (ej. Murder Mystery Packs) vía JSON-UI",
+    "uuid": "9fa5b5db-66fb-420b-8beb-5db9733d63a6",
+    "version": [1, 0, 0],
+    "min_engine_version": [1, 21, 0]
+  },
+  "modules": [
+    {
+      "type": "resources",
+      "uuid": "3bdd3652-e322-4fe5-af16-eef49311e374",
+      "version": [1, 0, 0]
+    }
+  ]
+}

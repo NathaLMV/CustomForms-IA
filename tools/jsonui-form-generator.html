@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Generador de UIs personalizadas (Bedrock, estructura Hive)</title>
+<style>
+  :root { --bg:#14161c; --panel:#1e2129; --panel2:#262a34; --line:#353a47;
+    --txt:#e6e8ee; --muted:#9aa3b2; --accent:#6ad36a; --accent2:#d36ad3; --gold:#eed20a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:14px/1.5 system-ui,"Segoe UI",Roboto,sans-serif; }
+  header { padding:14px 20px; border-bottom:1px solid var(--line); background:linear-gradient(90deg,#1b1d24,#222530); }
+  header h1 { margin:0; font-size:17px; } header p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+  .ver { display:inline-block; margin-left:8px; padding:1px 7px; border-radius:10px; background:var(--accent); color:#06210a; font-size:11px; font-weight:700; vertical-align:middle; }
+  .wrap { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:16px 20px; align-items:start; }
+  @media (max-width:1050px){ .wrap{ grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:16px; }
+  .card h2 { margin:0 0 10px; font-size:14px; color:var(--accent); }
+  .card h3 { margin:12px 0 4px; font-size:12px; color:var(--gold); }
+  label { display:block; font-size:12px; color:var(--muted); margin:8px 0 3px; }
+  input, select { width:100%; background:var(--panel2); color:var(--txt); border:1px solid var(--line); border-radius:6px; padding:7px 9px; font:inherit; }
+  input[type=checkbox]{ width:auto; } input[type=color]{ padding:2px; height:32px; } input[type=file]{ padding:4px; font-size:11px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  .chk { display:flex; align-items:center; gap:8px; margin-top:10px; } .chk label { margin:0; color:var(--txt); }
+  button { cursor:pointer; border:0; border-radius:7px; padding:8px 13px; font:inherit; font-weight:600; }
+  .btn-primary{ background:var(--accent); color:#06210a; } .btn-2{ background:var(--accent2); color:#21062a; }
+  .btn-ghost{ background:var(--panel2); color:var(--txt); border:1px solid var(--line); }
+  .btn-danger{ background:#3a2630; color:#ff9a9a; border:1px solid #5a2f3f; }
+  .btn-zip{ background:var(--gold); color:#2a2400; }
+  .toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tab{ background:var(--panel2); border:1px solid var(--line); color:var(--txt); }
+  .tab.active{ background:var(--accent); color:#06210a; border-color:var(--accent); }
+  .el{ background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:10px; margin-top:8px; }
+  .el-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .flagbox{ font-family:monospace; background:#0d0f14; border:1px solid var(--line); border-radius:6px; padding:6px 9px; color:var(--accent); display:inline-block; }
+  pre{ background:#0d0f14; border:1px solid var(--line); border-radius:8px; padding:12px; overflow:auto; max-height:220px; font-size:12px; margin:0; white-space:pre; }
+  .hint{ color:var(--muted); font-size:11px; margin-top:6px; }
+  #stage{ position:relative; width:100%; max-width:470px; aspect-ratio:16/11; margin:0 auto; border-radius:8px; overflow:hidden;
+    border:1px solid #000; box-shadow:0 6px 24px rgba(0,0,0,.5); background:repeating-linear-gradient(45deg,#2a2233 0 18px,#2f2638 18px 36px); }
+  #formBox{ position:absolute; inset:8% 18%; background:rgba(14,14,18,.92); border:2px solid #0a0a0c; border-radius:4px; overflow:hidden; }
+  .ov{ position:absolute; pointer-events:none; }
+  .drag{ pointer-events:auto; cursor:move; touch-action:none; }
+  .drag:hover{ outline:1px dashed rgba(106,211,106,.8); }
+  .ov-img{ background-size:cover; background-position:center; border:1px dashed rgba(106,211,106,.6); display:flex; align-items:center; justify-content:center; color:#6ad36a; font-size:9px; text-align:center; overflow:hidden; }
+  .ov-img.has-src{ border-color:transparent; }
+  .ov-label{ white-space:pre-wrap; text-shadow:1px 1px 0 #000; }
+  .ov-scroll{ overflow:auto; border:1px solid rgba(255,255,255,.12); border-radius:3px; padding:4px; font-size:10px; }
+  .pv-title{ color:#fff; font-weight:800; text-shadow:1px 1px 0 #000; }
+  .pv-btn{ display:flex; align-items:center; justify-content:center; gap:4px; color:#fff; text-align:center; padding:5px; border-radius:2px; font-size:11px; text-shadow:1px 1px 0 #000; margin-bottom:4px; overflow:hidden; }
+  .pv-btn img{ height:18px; }
+  .stage-note{ text-align:center; color:var(--muted); font-size:11px; margin-top:6px; }
+  details{ margin-top:10px; } summary{ cursor:pointer; color:var(--accent); font-size:13px; font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Generador de UIs personalizadas <span class="ver" id="ver">build 12</span></h1>
+  <p>Crea cada UI en su archivo, el <code>server_form.json</code> con solo referencias + activación por flag, y el
+     <code>_ui_defs.json</code>. Botones con icono/color, texto avanzado, paneles/degradados y scroll. Guarda tu proyecto.
+     Ábrelo en un navegador (no en la previsualización de Archivos). 100% offline.</p>
+</header>
+
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h2>Proyecto</h2>
+      <div class="toolbar" style="margin-top:0">
+        <button class="btn-ghost" data-act="undo">↶ Deshacer</button>
+        <button class="btn-ghost" data-act="redo">↷ Rehacer</button>
+        <button class="btn-ghost" data-act="saveProject">💾 Guardar proyecto (.json)</button>
+        <label class="btn-ghost" style="display:inline-block;margin:0;cursor:pointer">📂 Cargar
+          <input type="file" accept=".json,application/json" data-act="loadProject" style="display:none">
+        </label>
+        <label class="btn-ghost" style="display:inline-block;margin:0;cursor:pointer">⤵ Importar server_form.json
+          <input type="file" accept=".json,application/json" data-act="importServer" style="display:none">
+        </label>
+      </div>
+      <div class="hint">Se guarda solo en tu navegador automáticamente. "Importar" reconstruye nombres y flags de un server_form.json generado aquí.</div>
+    </div>
+
+    <div class="card">
+      <h2>1 · Formularios (UIs)</h2>
+      <div class="tabs" id="tabs"></div>
+      <div class="toolbar">
+        <button class="btn-ghost" data-act="addForm">+ Nueva UI</button>
+        <button class="btn-danger" data-act="removeForm">Eliminar UI activa</button>
+      </div>
+    </div>
+    <div class="card" id="formCard"></div>
+    <div class="card" id="btnCard"></div>
+    <div class="card" id="elemCard"></div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Vista previa (UI activa)</h2>
+      <div id="stage"></div>
+      <div class="stage-note">Aproximación. Carga una imagen/icono local para verlo.</div>
+    </div>
+    <div class="card">
+      <h2>Archivos a generar</h2>
+      <div class="toolbar" style="margin-top:0"><button class="btn-zip" data-act="zip">⬇ Descargar todo (.zip)</button></div>
+      <div class="hint">El zip trae <code>ui/_ui_defs.json</code>, <code>ui/server_form.json</code>, <code>ui/forms/*.json</code> y <code>scripts/forms.js</code>.</div>
+      <h3>ui/server_form.json</h3>
+      <div class="toolbar" style="margin-top:0;margin-bottom:6px"><button class="btn-2" data-act="cp" data-arg="outServer">⧉ Copiar</button></div>
+      <pre id="outServer"></pre>
+      <h3>ui/_ui_defs.json</h3>
+      <div class="toolbar" style="margin-top:0;margin-bottom:6px"><button class="btn-2" data-act="cp" data-arg="outDefs">⧉ Copiar</button></div>
+      <pre id="outDefs"></pre>
+      <h3>ui/forms/<span id="panelName"></span> (UI activa)</h3>
+      <div class="toolbar" style="margin-top:0;margin-bottom:6px"><button class="btn-2" data-act="cp" data-arg="outPanel">⧉ Copiar</button></div>
+      <pre id="outPanel"></pre>
+      <h3>scripts/forms.js</h3>
+      <div class="toolbar" style="margin-top:0;margin-bottom:6px"><button class="btn-2" data-act="cp" data-arg="outJs">⧉ Copiar</button></div>
+      <pre id="outJs"></pre>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function () {
+  const ANCHORS = ["top_left","top_middle","top_right","left_middle","center","right_middle","bottom_left","bottom_middle","bottom_right"];
+  const FONTS = ["default","MinecraftTen","smooth","rune"];
+  const ALIGNS = ["left","center","right"];
+  const FONT_SIZES = ["small","normal","large","extra_large"];
+  const FLAG_POOL = ["a","b","c","d","e","f","0","1","2","3","4","5","6","7","8","9"].map(ch => "§m§" + ch);
+  const FLAG_CHARS = FLAG_POOL.map(x => x.slice(-1));
+  const STORE_KEY = "cf_project_v6";
+
+  let forms = [], active = null, uid = 0;
+  const num = (v, d) => { const n = Number(v); return isNaN(n) ? d : n; };
+  const slug = s => (s || "x").toLowerCase().replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "x";
+  const clean = t => String(t || "").replace(/§./g, "");
+  const esc = s => String(s).replace(/"/g, "&quot;");
+  const el = id => document.getElementById(id);
+  const pascal = s => (String(s || "Form").replace(/[^a-zA-Z0-9]+/g, " ").trim().split(/\s+/)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1)).join("")) || "Form";
+  const fileName = f => pascal(f.name) + "Form.json";
+  const nsOf = f => slug(f.id) + "_form";
+  function hexToRgb(hex) { const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "#ffffff");
+    return m ? [parseInt(m[1],16)/255, parseInt(m[2],16)/255, parseInt(m[3],16)/255].map(n => +n.toFixed(3)) : [1,1,1]; }
+  const hexToRgba = (hex, a) => hexToRgb(hex).concat([+(+a).toFixed(3)]);
+  const cssOf = hex => { const c = hexToRgb(hex).map(n => Math.round(n * 255)); return `rgb(${c[0]},${c[1]},${c[2]})`; };
+  function nextUid() { let mx = 0; forms.forEach(f => { mx = Math.max(mx, f.uid); (f.buttons || []).forEach(b => mx = Math.max(mx, b.id)); (f.elements || []).forEach(e => mx = Math.max(mx, e.id)); }); uid = Math.max(uid, mx); return ++uid; }
+
+  const DEFAULT_BTN_COLOR = "#4f5666";
+  function newButton(text, color) { return { id: nextUid(), text: text || "Botón", icon: "", color: color || DEFAULT_BTN_COLOR, bgTexture: "", forceFlag: false }; }
+  function defaultForm() {
+    const fid = nextUid();
+    return { uid: fid, id: "form" + fid, name: "SkyWars", flag: null,
+      pvTitle: "JUGAR SKYWARS", pvBody: "¡Elige tu modo de juego!",
+      dlgW: 320, dlgHpct: 78, dimOn: true, closeOn: true,
+      bgOn: true, bgColor: "#101018", bgColor2: "#241033", bgAlpha: 0.92, borderTexture: "",
+      titleOn: true, titleOffsetY: 10, titleScale: 1.5, titleColor: "#ffffff", titleFont: "MinecraftTen", titleSize: "normal", titleAlign: "center", titleShadow: true,
+      descOn: true, descOffsetY: 38, descColor: "#5cc0ff", descFont: "default", descSize: "normal", descAlign: "center", descShadow: true,
+      btnOn: true, btnWidth: 200, btnOffsetY: 78, btnHeight: 26, btnIconSize: 18,
+      btnLabelColor: "#ffffff", btnLabelScale: 1, btnLabelAlign: "center", btnHover: true,
+      btnSound: "", btnSoundVol: 1, btnSoundPitch: 1,
+      buttons: [newButton("Solitario"), newButton("Dúos"), newButton("Escuadrones")],
+      elements: [] };
+  }
+
+  function addForm() { const f = defaultForm(); forms.push(f); active = f.uid; reflag(); render(); }
+  function removeForm() { forms = forms.filter(f => f.uid !== active); active = forms.length ? forms[forms.length - 1].uid : null; reflag(); render(); }
+  // Conserva los flags ya asignados (incluidos los editados a mano) y solo rellena los que falten con un glifo libre.
+  function reflag() { const used = new Set(forms.map(f => f.flag).filter(Boolean)); let pi = 0;
+    forms.forEach(f => { if (f.flag) return; while (pi < FLAG_POOL.length && used.has(FLAG_POOL[pi])) pi++; f.flag = FLAG_POOL[pi] || FLAG_POOL[FLAG_POOL.length - 1]; used.add(f.flag); }); }
+  const getActive = () => forms.find(f => f.uid === active);
+
+  function setF(field, value) { const f = getActive(); if (!f) return;
+    if (field === "flagChar") { f.flag = "§m§" + value; refresh(); return; }
+    f[field] = value;
+    if (["titleOn","descOn","btnOn","bgOn","closeOn","dimOn"].includes(field)) render(); else refresh(); }
+  function addBtn() { const f = getActive(); if (!f) return; f.buttons.push(newButton("Nuevo botón")); render(); }
+  function removeBtn(id) { const f = getActive(); if (!f) return; f.buttons = f.buttons.filter(b => b.id !== id); render(); }
+  function updBtn(id, key, value) { const f = getActive(); if (!f) return; const b = f.buttons.find(x => x.id === id); if (!b) return; b[key] = value; if (key === "forceFlag") render(); else refresh(); }
+  function loadBtnIcon(id, input) { const f = getActive(); if (!f) return; const b = f.buttons.find(x => x.id === id);
+    const file = input.files && input.files[0]; if (!b || !file) return; const r = new FileReader(); r.onload = () => { b._src = r.result; drawPreview(); }; r.readAsDataURL(file); }
+
+  function addEl(type) {
+    const f = getActive(); if (!f) return; const id = nextUid();
+    const base = { id, anchor_from: "top_middle", anchor_to: "top_middle", ox: 0, oy: 120, layer: 15 };
+    if (type === "image") f.elements.push(Object.assign(base, { type, name: "img" + id, texture: "textures/ui/mi_textura", fill: false, w: 280, h: 70, alpha: 1, tint: false, color: "#ffffff", nineslice: false, nsl: 4, sidecar: false, bw: 16, bh: 16, keep_ratio: false, bilinear: false, grayscale: false, tiled: false, useUv: false, uvx: 0, uvy: 0, uvw: 16, uvh: 16, vis: true, clip: false, _src: null }));
+    else if (type === "bg") f.elements.push(Object.assign(base, { type: "image", name: "fondo" + id, texture: "textures/ui/fondo", fill: true, w: 280, h: 70, oy: 0, layer: 1, alpha: 1, tint: false, color: "#ffffff", nineslice: false, nsl: 4, sidecar: false, bw: 16, bh: 16, keep_ratio: false, bilinear: false, grayscale: false, tiled: false, useUv: false, uvx: 0, uvy: 0, uvw: 16, uvh: 16, vis: true, clip: false, _src: null }));
+    else if (type === "gradient") f.elements.push(Object.assign(base, { type, name: "panel" + id, color1: "#101018", color2: "#3a0a3f", alpha: 0.85, fill: true, w: 280, h: 120, oy: 0, layer: 1 }));
+    else if (type === "label") f.elements.push(Object.assign(base, { type, name: "texto" + id, text: "Mi texto", color: "#ffffff", font: "default", fontSize: "normal", align: "center", shadow: true, scale: 1, linePad: 1, localize: false }));
+    else if (type === "scroll") f.elements.push(Object.assign(base, { type, name: "scroll" + id, text: "#form_text", color: "#5cc0ff", font: "default", align: "left", w: 200, h: 80, layer: 6 }));
+    render();
+  }
+  function removeEl(id) { const f = getActive(); if (!f) return; f.elements = f.elements.filter(e => e.id !== id); render(); }
+  function updEl(id, key, value) { const f = getActive(); if (!f) return; const e = f.elements.find(x => x.id === id); if (!e) return; e[key] = value; if (key === "fill" || key === "tint" || key === "nineslice" || key === "sidecar" || key === "useUv") render(); else refresh(); }
+  function loadElImg(id, input) { const f = getActive(); if (!f) return; const e = f.elements.find(x => x.id === id);
+    const file = input.files && input.files[0]; if (!e || !file) return; const r = new FileReader(); r.onload = () => { e._src = r.result; drawPreview(); }; r.readAsDataURL(file); }
+
+  /* ---- helpers UI ---- */
+  function inpF(key, value, type) { if (type === "checkbox") return `<input type="checkbox" data-f="${key}" ${value ? "checked" : ""}>`;
+    return `<input type="${type || "text"}" data-f="${key}" data-type="${type || "text"}" value="${esc(value)}">`; }
+  function selF(key, value, opts) { return `<select data-f="${key}">` + opts.map(o => `<option ${o === value ? "selected" : ""}>${o}</option>`).join("") + `</select>`; }
+  function inpB(id, key, value, type) { if (type === "checkbox") return `<input type="checkbox" data-bt="${id}" data-key="${key}" ${value ? "checked" : ""}>`;
+    return `<input type="${type || "text"}" data-bt="${id}" data-key="${key}" data-type="${type || "text"}" value="${esc(value)}">`; }
+  function inpE(id, key, value, type) { if (type === "checkbox") return `<input type="checkbox" data-elid="${id}" data-key="${key}" ${value ? "checked" : ""}>`;
+    return `<input type="${type || "text"}" data-elid="${id}" data-key="${key}" data-type="${type || "text"}" value="${esc(value)}">`; }
+  function selE(id, key, value, opts) { return `<select data-elid="${id}" data-key="${key}">` + opts.map(o => `<option ${o === value ? "selected" : ""}>${o}</option>`).join("") + `</select>`; }
+  const rowF = (label, key, val, type) => `<div><label>${label}</label>${inpF(key, val, type)}</div>`;
+  function anchorBlock(id, e) { return `<div class="row"><div><label>anchor_from</label>${selE(id, "anchor_from", e.anchor_from, ANCHORS)}</div>
+    <div><label>anchor_to</label>${selE(id, "anchor_to", e.anchor_to, ANCHORS)}</div></div>
+    <div class="row3"><div><label>offset X</label>${inpE(id, "ox", e.ox, "number")}</div>
+    <div><label>offset Y</label>${inpE(id, "oy", e.oy, "number")}</div>
+    <div><label>layer</label>${inpE(id, "layer", e.layer, "number")}</div></div>`; }
+
+  function render() {
+    el("tabs").innerHTML = forms.length
+      ? forms.map(f => `<button class="tab ${f.uid === active ? "active" : ""}" data-act="selectForm" data-arg="${f.uid}">${f.name}</button>`).join("")
+      : "<span class='hint'>Sin UIs. Crea una.</span>";
+    const f = getActive();
+    if (!f) { el("formCard").innerHTML = ""; el("btnCard").innerHTML = ""; el("elemCard").innerHTML = ""; refresh(); return; }
+
+    el("formCard").innerHTML = `<h2>2 · UI activa: ${f.name}</h2>
+      <label>Nombre / ID (slug, único)</label>${inpF("id", f.id)}
+      <label>Nombre visible (archivo: <b>${fileName(f)}</b>)</label>${inpF("name", f.name)}
+      <label>Flag de activación (glifo invisible al final del título — editable)</label>
+      <div class="row"><div>${selF("flagChar", (f.flag || "§m§a").slice(-1), FLAG_CHARS)}</div><div><div class="flagbox">${f.flag || "§m§a"}</div></div></div>
+      <label>Título</label>${inpF("pvTitle", f.pvTitle)}
+      <label>Cuerpo / descripción (#form_text)</label>${inpF("pvBody", f.pvBody)}
+      <details><summary>Título · texto avanzado</summary>
+        <div class="chk">${inpF("titleOn", f.titleOn, "checkbox")}<label>Mostrar</label></div>
+        <div class="row"><div><label>Color</label>${inpF("titleColor", f.titleColor, "color")}</div><div><label>Fuente</label>${selF("titleFont", f.titleFont, FONTS)}</div></div>
+        <div class="row3"><div><label>Alineación</label>${selF("titleAlign", f.titleAlign, ALIGNS)}</div><div><label>Escala</label>${inpF("titleScale", f.titleScale, "number")}</div><div><label>offset Y</label>${inpF("titleOffsetY", f.titleOffsetY, "number")}</div></div>
+        <div class="row"><div><label>Tamaño de fuente</label>${selF("titleSize", f.titleSize || "normal", FONT_SIZES)}</div><div class="chk">${inpF("titleShadow", f.titleShadow, "checkbox")}<label>Sombra</label></div></div>
+      </details>
+      <details><summary>Descripción · texto avanzado</summary>
+        <div class="chk">${inpF("descOn", f.descOn, "checkbox")}<label>Mostrar</label></div>
+        <div class="row"><div><label>Color</label>${inpF("descColor", f.descColor, "color")}</div><div><label>Fuente</label>${selF("descFont", f.descFont, FONTS)}</div></div>
+        <div class="row"><div><label>Alineación</label>${selF("descAlign", f.descAlign, ALIGNS)}</div><div><label>offset Y</label>${inpF("descOffsetY", f.descOffsetY, "number")}</div></div>
+        <div class="row"><div><label>Tamaño de fuente</label>${selF("descSize", f.descSize || "normal", FONT_SIZES)}</div><div></div></div>
+        <div class="chk">${inpF("descShadow", f.descShadow, "checkbox")}<label>Sombra</label></div>
+      </details>
+      <details><summary>Diálogo · fondo · botón cerrar · adaptación móvil</summary>
+        <div class="row"><div><label>Ancho (px, en PC)</label>${inpF("dlgW", f.dlgW, "number")}</div><div><label>Alto (% pantalla)</label>${inpF("dlgHpct", f.dlgHpct, "number")}</div></div>
+        <div class="hint">En móvil (pocket) se adapta solo: ancho 94%, alto 88%, botones más grandes.</div>
+        <div class="chk">${inpF("bgOn", f.bgOn, "checkbox")}<label>Fondo del diálogo</label></div>
+        ${f.bgOn ? `<div class="row3"><div><label>Color 1</label>${inpF("bgColor", f.bgColor, "color")}</div><div><label>Color 2</label>${inpF("bgColor2", f.bgColor2, "color")}</div><div><label>Opacidad</label>${inpF("bgAlpha", f.bgAlpha, "number")}</div></div>
+        <label>Textura de borde (nine-slice, opcional)</label>${inpF("borderTexture", f.borderTexture || "")}` : ""}
+        <div class="chk">${inpF("closeOn", f.closeOn, "checkbox")}<label>Botón de cerrar (X) arriba a la derecha</label></div>
+        <div class="chk">${inpF("dimOn", f.dimOn, "checkbox")}<label>Atenuar el fondo del mundo</label></div>
+      </details>`;
+
+    // botones avanzados
+    el("btnCard").innerHTML = `<h2>3 · Botones</h2>
+      <div class="chk">${inpF("btnOn", f.btnOn, "checkbox")}<label>Mostrar botones</label></div>
+      ${f.btnOn ? `<div class="row3"><div><label>Ancho</label>${inpF("btnWidth", f.btnWidth, "number")}</div><div><label>Alto</label>${inpF("btnHeight", f.btnHeight, "number")}</div><div><label>offset Y</label>${inpF("btnOffsetY", f.btnOffsetY, "number")}</div></div>
+      <details><summary>Estilo de botones (texto, icono, hover, sonido)</summary>
+        <div class="row3"><div><label>Color del texto</label>${inpF("btnLabelColor", f.btnLabelColor || "#ffffff", "color")}</div><div><label>Escala texto</label>${inpF("btnLabelScale", f.btnLabelScale != null ? f.btnLabelScale : 1, "number")}</div><div><label>Alineación</label>${selF("btnLabelAlign", f.btnLabelAlign || "center", ALIGNS)}</div></div>
+        <label>Tamaño del icono (px)</label>${inpF("btnIconSize", f.btnIconSize != null ? f.btnIconSize : 18, "number")}
+        <div class="chk">${inpF("btnHover", f.btnHover, "checkbox")}<label>Resaltado al pasar/tocar (hover)</label></div>
+        <label>Sonido al pulsar (vacío = ninguno)</label>${inpF("btnSound", f.btnSound || "")}
+        <div class="hint">Ej: <code>random.click</code> · <code>ui.button.tap</code></div>
+        <div class="row"><div><label>Volumen</label>${inpF("btnSoundVol", f.btnSoundVol != null ? f.btnSoundVol : 1, "number")}</div><div><label>Tono (pitch)</label>${inpF("btnSoundPitch", f.btnSoundPitch != null ? f.btnSoundPitch : 1, "number")}</div></div>
+      </details>` : ""}
+      ${(() => { const bf = buttonFlags(f); return f.buttons.map((b, i) => `<div class="el"><div class="el-head"><strong>Botón</strong>
+        <button class="btn-danger" data-act="removeBtn" data-arg2="${b.id}">✕</button></div>
+        <div class="row"><div><label>Texto</label>${inpB(b.id, "text", b.text)}</div><div><label>Color</label>${inpB(b.id, "color", b.color, "color")}</div></div>
+        <label>Icono (ruta de textura, opcional)</label>${inpB(b.id, "icon", b.icon)}
+        <label>Textura de fondo propia (opcional, nine-slice)</label>${inpB(b.id, "bgTexture", b.bgTexture || "")}
+        <div class="chk">${inpB(b.id, "forceFlag", b.forceFlag, "checkbox")}<label>Flag propio (personalización solo para este botón)</label></div>
+        <div class="hint">Flag: <span class="flagbox">${bf[i].needs ? bf[i].flag : "— (sin flag, estilo base)"}</span></div>
+        <label>Icono local (solo previsualizar)</label><input type="file" accept="image/*" data-act="loadBtnIcon" data-bt="${b.id}">
+      </div>`).join(""); })()}
+      <div class="toolbar"><button class="btn-ghost" data-act="addBtn">+ Botón</button></div>`;
+
+    // elementos
+    let html = f.elements.map(e => {
+      let body = "";
+      if (e.type === "image") body = `<label>Ruta de textura</label>${inpE(e.id, "texture", e.texture)}
+        <div class="chk">${inpE(e.id, "fill", e.fill, "checkbox")}<label>Ocupar todo (fondo)</label></div>
+        ${e.fill ? "" : `<div class="row"><div><label>ancho</label>${inpE(e.id, "w", e.w, "number")}</div><div><label>alto</label>${inpE(e.id, "h", e.h, "number")}</div></div>`}
+        <div class="row"><div><label>Opacidad (0-1)</label>${inpE(e.id, "alpha", e.alpha != null ? e.alpha : 1, "number")}</div><div><div class="chk">${inpE(e.id, "tint", e.tint, "checkbox")}<label>Tintar de color</label></div></div></div>
+        ${e.tint ? `<label>Color del tinte</label>${inpE(e.id, "color", e.color || "#ffffff", "color")}` : ""}
+        <div class="chk">${inpE(e.id, "nineslice", e.nineslice, "checkbox")}<label>Nine-slice (borde que no se estira)</label></div>
+        ${e.nineslice ? `<div class="row"><div><label>nineslice_size</label>${inpE(e.id, "nsl", e.nsl != null ? e.nsl : 4, "number")}</div><div><div class="chk">${inpE(e.id, "sidecar", e.sidecar, "checkbox")}<label>Generar .json de la textura</label></div></div></div>
+        ${e.sidecar ? `<label>Tamaño base del PNG (px)</label><div class="row"><div>${inpE(e.id, "bw", e.bw != null ? e.bw : 16, "number")}</div><div>${inpE(e.id, "bh", e.bh != null ? e.bh : 16, "number")}</div></div><div class="hint">Se creará <code>${esc((e.texture || "").trim())}.json</code> junto a tu PNG (como las texturas de Hive). En ese caso NO se pone nineslice_size en el control.</div>` : `<div class="hint">Si tu PNG ya trae su propio <code>.json</code>, deja esto sin marcar y desactiva nine-slice: el juego lo usa solo.</div>`}` : ""}
+        <details><summary>Avanzado (imagen)</summary>
+          <div class="row"><div class="chk">${inpE(e.id, "keep_ratio", e.keep_ratio, "checkbox")}<label>Mantener proporción</label></div>
+          <div class="chk">${inpE(e.id, "bilinear", e.bilinear, "checkbox")}<label>Bilinear (suavizado)</label></div></div>
+          <div class="row"><div class="chk">${inpE(e.id, "grayscale", e.grayscale, "checkbox")}<label>Escala de grises</label></div>
+          <div class="chk">${inpE(e.id, "tiled", e.tiled, "checkbox")}<label>Texturizado (tiled)</label></div></div>
+          <div class="row"><div class="chk">${inpE(e.id, "vis", e.vis !== false, "checkbox")}<label>Visible</label></div>
+          <div class="chk">${inpE(e.id, "clip", e.clip, "checkbox")}<label>Recortar hijos (clips_children)</label></div></div>
+          <div class="chk">${inpE(e.id, "useUv", e.useUv, "checkbox")}<label>Usar recorte de sprite (uv)</label></div>
+          ${e.useUv ? `<div class="row3"><div><label>uv x</label>${inpE(e.id, "uvx", e.uvx, "number")}</div><div><label>uv y</label>${inpE(e.id, "uvy", e.uvy, "number")}</div><div></div></div>
+          <div class="row"><div><label>uv ancho</label>${inpE(e.id, "uvw", e.uvw, "number")}</div><div><label>uv alto</label>${inpE(e.id, "uvh", e.uvh, "number")}</div></div>` : ""}
+        </details>
+        ${anchorBlock(e.id, e)}<label>Imagen local (previsualizar)</label><input type="file" accept="image/*" data-act="loadElImg" data-elid="${e.id}">`;
+      else if (e.type === "gradient") body = `<div class="row"><div><label>Color 1</label>${inpE(e.id, "color1", e.color1, "color")}</div><div><label>Color 2</label>${inpE(e.id, "color2", e.color2, "color")}</div></div>
+        <label>Opacidad (0-1)</label>${inpE(e.id, "alpha", e.alpha, "number")}
+        <div class="chk">${inpE(e.id, "fill", e.fill, "checkbox")}<label>Ocupar todo</label></div>
+        ${e.fill ? "" : `<div class="row"><div><label>ancho</label>${inpE(e.id, "w", e.w, "number")}</div><div><label>alto</label>${inpE(e.id, "h", e.h, "number")}</div></div>`}${anchorBlock(e.id, e)}`;
+      else if (e.type === "label") body = `<label>Texto (admite §)</label>${inpE(e.id, "text", e.text)}
+        <div class="row"><div><label>Color</label>${inpE(e.id, "color", e.color, "color")}</div><div><label>Fuente</label>${selE(e.id, "font", e.font, FONTS)}</div></div>
+        <div class="row"><div><label>Alineación</label>${selE(e.id, "align", e.align, ALIGNS)}</div><div><label>Escala</label>${inpE(e.id, "scale", e.scale, "number")}</div></div>
+        <div class="row"><div><label>Tamaño de fuente</label>${selE(e.id, "fontSize", e.fontSize || "normal", FONT_SIZES)}</div><div><label>Espaciado de línea</label>${inpE(e.id, "linePad", e.linePad != null ? e.linePad : 1, "number")}</div></div>
+        <div class="row"><div class="chk">${inpE(e.id, "shadow", e.shadow, "checkbox")}<label>Sombra</label></div><div class="chk">${inpE(e.id, "localize", e.localize, "checkbox")}<label>Traducir (localize)</label></div></div>${anchorBlock(e.id, e)}`;
+      else if (e.type === "scroll") body = `<label>Texto (#form_text o literal)</label>${inpE(e.id, "text", e.text)}
+        <div class="row"><div><label>Color</label>${inpE(e.id, "color", e.color, "color")}</div><div><label>Fuente</label>${selE(e.id, "font", e.font, FONTS)}</div></div>
+        <div class="row"><div><label>ancho</label>${inpE(e.id, "w", e.w, "number")}</div><div><label>alto</label>${inpE(e.id, "h", e.h, "number")}</div></div>${anchorBlock(e.id, e)}`;
+      const titles = { image: "🖼 Imagen", gradient: "🎨 Panel/Degradado", label: "🔤 Texto", scroll: "📜 Scroll de texto" };
+      return `<div class="el"><div class="el-head"><strong>${titles[e.type] || e.type} · ${e.name}</strong>
+        <button class="btn-danger" data-act="removeEl" data-arg2="${e.id}">Quitar</button></div>
+        <label>Nombre del control</label>${inpE(e.id, "name", e.name)}${body}</div>`;
+    }).join("");
+    el("elemCard").innerHTML = `<h2>4 · Elementos de la UI</h2><div>${html || "<div class='hint'>Sin elementos.</div>"}</div>
+      <div class="toolbar">
+        <button class="btn-ghost" data-act="addEl" data-arg="image">+ Imagen</button>
+        <button class="btn-ghost" data-act="addEl" data-arg="bg">+ Fondo</button>
+        <button class="btn-ghost" data-act="addEl" data-arg="gradient">+ Panel/Degradado</button>
+        <button class="btn-ghost" data-act="addEl" data-arg="label">+ Texto</button>
+        <button class="btn-ghost" data-act="addEl" data-arg="scroll">+ Scroll</button>
+      </div>`;
+    refresh();
+  }
+
+  /* ---- mapa color->subflag de botones (compartido por panel y script) ---- */
+  // Cada botón con personalización (color != base, textura propia o "flag propio")
+  // recibe un glifo invisible único; los demás usan el estilo base sin flag.
+  function buttonFlags(f) {
+    let i = 0;
+    return f.buttons.map(b => {
+      const needs = !!b.forceFlag || !!(b.bgTexture && b.bgTexture.trim()) || (String(b.color || "").toLowerCase() !== DEFAULT_BTN_COLOR);
+      if (!needs) return { needs: false, flag: "", glyphChar: "" };
+      const flag = FLAG_POOL[i] || FLAG_POOL[FLAG_POOL.length - 1]; i++;
+      return { needs: true, flag, glyphChar: flag.slice(-1) };
+    });
+  }
+
+  /* ---- construir la UI personalizada (archivo propio) ---- */
+  function txtCtl(name, textBinding, e) {
+    const o = { type: "label", color: hexToRgb(e.color), font_type: e.font || "default", text_alignment: e.align || "center",
+      anchor_from: e.anchor_from, anchor_to: e.anchor_to, offset: [num(e.ox, 0), num(e.oy, 0)], size: ["100%", "default"],
+      layer: num(e.layer, 20), shadow: !!e.shadow };
+    if (e.scale) o.font_scale_factor = num(e.scale, 1);
+    if (e.fontSize && e.fontSize !== "normal") o.font_size = e.fontSize;
+    if (e.linePad != null) o.line_padding = num(e.linePad, 1);
+    if (e.localize) o.localize = true;
+    if (textBinding) { o.text = "#" + textBinding; o.bindings = [{ binding_name: "#" + textBinding, binding_type: "global" }]; }
+    else o.text = e.text;
+    return o;
+  }
+
+  function buildFormFile(f) {
+    const ns = nsOf(f), out = { namespace: ns }, ctrls = [];
+
+    if (f.titleOn) {
+      out.title_label = { type: "label", text: "#title_text", font_type: f.titleFont || "MinecraftTen", color: hexToRgb(f.titleColor),
+        text_alignment: f.titleAlign || "center", anchor_from: "top_middle", anchor_to: "top_middle", offset: [0, num(f.titleOffsetY, 10)],
+        font_scale_factor: num(f.titleScale, 1.5), size: ["100%", "default"], layer: 6, shadow: !!f.titleShadow,
+        bindings: [{ binding_name: "#title_text", binding_type: "global" }] };
+      if (f.titleSize && f.titleSize !== "normal") out.title_label.font_size = f.titleSize;
+      ctrls.push({ [`title@${ns}.title_label`]: {} });
+    }
+    if (f.descOn) {
+      out.desc_label = { type: "label", text: "#form_text", color: hexToRgb(f.descColor), font_type: f.descFont || "default",
+        text_alignment: f.descAlign || "center", anchor_from: "top_middle", anchor_to: "top_middle", offset: [0, num(f.descOffsetY, 38)],
+        size: ["80%", "default"], line_padding: 2, layer: 6, shadow: !!f.descShadow };
+      if (f.descSize && f.descSize !== "normal") out.desc_label.font_size = f.descSize;
+      ctrls.push({ [`desc@${ns}.desc_label`]: {} });
+    }
+
+    if (f.btnOn && f.buttons.length) {
+      const bf = buttonFlags(f);
+      out.buttons = { type: "stack_panel", orientation: "vertical", anchor_from: "top_middle", anchor_to: "top_middle",
+        "$bw|default": num(f.btnWidth, 200), variables: [{ requires: "$pocket_screen", "$bw": "92%" }],
+        size: ["$bw", "100%c"], offset: [0, num(f.btnOffsetY, 78)], layer: 5,
+        factory: { name: "button_list_factory", control_name: `${ns}.button` }, collection_name: "form_buttons",
+        bindings: [{ binding_name: "#form_button_length", binding_name_override: "#collection_length" }] };
+      out["button@common.button"] = { "$bh|default": num(f.btnHeight, 26), variables: [{ requires: "$pocket_screen", "$bh": Math.max(num(f.btnHeight, 26), 32) }],
+        size: ["100%", "$bh"], "$pressed_button_name": "button.form_button_click",
+        bindings: [{ binding_type: "collection_details", binding_collection_name: "form_buttons" }],
+        controls: f.btnHover
+          ? [ { [`default@${ns}.button_face`]: { "$ov": 0 } }, { [`hover@${ns}.button_face`]: { "$ov": 0.14 } }, { [`pressed@${ns}.button_face`]: { "$ov": 0.05 } } ]
+          : [ { [`default@${ns}.button_face`]: {} }, { [`hover@${ns}.button_face`]: {} }, { [`pressed@${ns}.button_face`]: {} } ] };
+      if ((f.btnSound || "").trim()) out["button@common.button"].sounds = [{ sound_name: f.btnSound.trim(), sound_volume: num(f.btnSoundVol, 1), sound_pitch: num(f.btnSoundPitch, 1) }];
+      const faceCtl = [];
+      // variante base (sin flag): color por defecto
+      faceCtl.push({ bg_base: { type: "custom", renderer: "gradient_renderer",
+        color1: hexToRgba(DEFAULT_BTN_COLOR, 1), color2: hexToRgba(DEFAULT_BTN_COLOR, 1), size: ["100%", "100%"], layer: 1 } });
+      // una variante por botón con flag propio: textura propia o su color
+      f.buttons.forEach((b, i) => {
+        const fl = bf[i]; if (!fl.needs) return;
+        const vis = [{ binding_type: "collection", binding_collection_name: "form_buttons", binding_name: "#form_button_text", binding_name_override: "#form_button_text" },
+          { binding_type: "view", source_property_name: `(not ((#form_button_text - '${fl.flag}') = #form_button_text))`, target_property_name: "#visible" }];
+        const tex = (b.bgTexture || "").trim();
+        const variant = tex
+          ? { type: "image", texture: tex, nineslice_size: [4, 4, 4, 4], tiled: false, size: ["100%", "100%"], layer: 1, bindings: vis }
+          : { type: "custom", renderer: "gradient_renderer", color1: hexToRgba(b.color, 1), color2: hexToRgba(b.color, 1), size: ["100%", "100%"], layer: 1, bindings: vis };
+        faceCtl.push({ [`bg_${i}`]: variant });
+      });
+      // resaltado al pasar/tocar (hover)
+      if (f.btnHover) faceCtl.push({ hover_ov: { type: "custom", renderer: "gradient_renderer",
+        color1: [1, 1, 1, "$ov"], color2: [1, 1, 1, "$ov"], "$ov|default": 0, size: ["100%", "100%"], layer: 4 } });
+      // icono (si la textura no esta vacia)
+      const isz = num(f.btnIconSize, 18);
+      faceCtl.push({ icon: { type: "image", size: [isz, isz], anchor_from: "left_middle", anchor_to: "left_middle",
+        offset: [4, 0], layer: 2, keep_ratio: true,
+        bindings: [{ binding_name: "#form_button_texture", binding_name_override: "#texture", binding_type: "collection", binding_collection_name: "form_buttons" },
+          { binding_name: "#form_button_texture_file_system", binding_name_override: "#texture_file_system", binding_type: "collection", binding_collection_name: "form_buttons" },
+          { binding_type: "view", source_property_name: "(not ((#texture = '') or (#texture = 'loading')))", target_property_name: "#visible" }] } });
+      // texto del boton
+      const lblCtl = { type: "label", text: "#form_button_text", color: hexToRgb(f.btnLabelColor || "#ffffff"), text_alignment: f.btnLabelAlign || "center",
+        anchor_from: "center", anchor_to: "center", size: ["100% - 8px", "default"], layer: 3, shadow: true,
+        bindings: [{ binding_type: "collection", binding_collection_name: "form_buttons", binding_name: "#form_button_text", binding_name_override: "#form_button_text" }] };
+      if (num(f.btnLabelScale, 1) !== 1) lblCtl.font_scale_factor = num(f.btnLabelScale, 1);
+      faceCtl.push({ label: lblCtl });
+      out.button_face = { type: "panel", size: ["100%", "100%"], controls: faceCtl };
+      ctrls.push({ [`buttons@${ns}.buttons`]: {} });
+    }
+
+    f.elements.forEach(e => {
+      const cn = slug(e.name) + "_" + e.id;
+      if (e.type === "image") {
+        out[cn] = { type: "image", texture: e.texture, size: e.fill ? ["100%", "100%"] : [num(e.w, 100), num(e.h, 40)],
+          anchor_from: e.anchor_from, anchor_to: e.anchor_to, offset: [num(e.ox, 0), num(e.oy, 0)], layer: num(e.layer, 1), keep_ratio: !!e.keep_ratio };
+        if (e.alpha != null && num(e.alpha, 1) !== 1) out[cn].alpha = num(e.alpha, 1);
+        if (e.tint) out[cn].color = hexToRgba(e.color || "#ffffff", 1).slice(0, 3);
+        if (e.bilinear) out[cn].bilinear = true;
+        if (e.grayscale) out[cn].grayscale = true;
+        if (e.tiled) out[cn].tiled = true;
+        if (e.useUv) { out[cn].uv = [num(e.uvx, 0), num(e.uvy, 0)]; out[cn].uv_size = [num(e.uvw, 16), num(e.uvh, 16)]; }
+        if (e.vis === false) out[cn].visible = false;
+        if (e.clip) out[cn].clips_children = true;
+        if (e.nineslice && !e.sidecar) { out[cn].nineslice_size = num(e.nsl, 4); if (!e.tiled) out[cn].tiled = false; }
+        ctrls.push({ [`${cn}@${ns}.${cn}`]: {} });
+      } else if (e.type === "gradient") {
+        out[cn] = { type: "custom", renderer: "gradient_renderer", color1: hexToRgba(e.color1, e.alpha), color2: hexToRgba(e.color2, e.alpha),
+          size: e.fill ? ["100%", "100%"] : [num(e.w, 100), num(e.h, 40)], anchor_from: e.anchor_from, anchor_to: e.anchor_to,
+          offset: [num(e.ox, 0), num(e.oy, 0)], layer: num(e.layer, 1) };
+        ctrls.push({ [`${cn}@${ns}.${cn}`]: {} });
+      } else if (e.type === "label") {
+        out[cn] = txtCtl(cn, null, e);
+        ctrls.push({ [`${cn}@${ns}.${cn}`]: {} });
+      } else if (e.type === "scroll") {
+        const isBind = /^#/.test(String(e.text).trim());
+        out[cn + "_txt"] = { type: "label", text: isBind ? e.text.trim() : e.text, color: hexToRgb(e.color), font_type: e.font || "default",
+          text_alignment: e.align || "left", size: ["100%", "default"], line_padding: 2, shadow: true };
+        if (isBind) out[cn + "_txt"].bindings = [{ binding_name: e.text.trim(), binding_type: "global" }];
+        out[cn + "_content"] = { type: "panel", size: ["100%", "100%c"], controls: [{ [`txt@${ns}.${cn}_txt`]: {} }] };
+        out[cn + "_sp@common.scrolling_panel"] = { size: [num(e.w, 200), num(e.h, 80)], anchor_from: e.anchor_from, anchor_to: e.anchor_to,
+          offset: [num(e.ox, 0), num(e.oy, 0)], layer: num(e.layer, 6), "$show_background": false,
+          "$scrolling_content": `${ns}.${cn}_content`, "$scroll_size": [4, "100% - 8px"] };
+        ctrls.push({ [`${cn}@${ns}.${cn}_sp`]: {} });
+      }
+    });
+
+    // --- diálogo centrado y responsivo: fondo + contenido + botón cerrar ---
+    const dialogCtls = [];
+    if (f.bgOn !== false) dialogCtls.push({ dialog_bg: { type: "custom", renderer: "gradient_renderer",
+      color1: hexToRgba(f.bgColor || "#101018", num(f.bgAlpha, 0.92)),
+      color2: hexToRgba(f.bgColor2 || f.bgColor || "#241033", num(f.bgAlpha, 0.92)),
+      size: ["100%", "100%"], layer: 0 } });
+    if ((f.borderTexture || "").trim()) dialogCtls.push({ dialog_border: { type: "image", texture: f.borderTexture.trim(),
+      nineslice_size: [4, 4, 4, 4], tiled: false, size: ["100%", "100%"], layer: 0 } });
+    ctrls.forEach(c => dialogCtls.push(c));
+    if (f.closeOn !== false) dialogCtls.push({ "close@common.close_button": {
+      anchor_from: "top_right", anchor_to: "top_right", offset: [-2, 2], layer: 20 } });
+
+    out.dialog = { type: "panel",
+      "$dlg_w|default": num(f.dlgW, 320), "$dlg_h|default": num(f.dlgHpct, 78) + "%",
+      variables: [{ requires: "$pocket_screen", "$dlg_w": "94%", "$dlg_h": "88%" }],
+      size: ["$dlg_w", "$dlg_h"], anchor_from: "center", anchor_to: "center", controls: dialogCtls };
+
+    const mainCtls = [];
+    if (f.dimOn !== false) mainCtls.push({ dim: { type: "custom", renderer: "gradient_renderer",
+      color1: [0, 0, 0, 0.5], color2: [0, 0, 0, 0.5], size: ["300%", "300%"], layer: 0 } });
+    mainCtls.push({ [`dialog@${ns}.dialog`]: {} });
+    out.main_panel = { type: "panel", size: ["100%", "100%"], controls: mainCtls };
+    return out;
+  }
+
+  /* ---- server_form.json: solo referencias + activación ---- */
+  function buildServerForm() {
+    const out = { namespace: "server_form" };
+    out["third_party_server_screen@common.base_screen"] = { "$screen_content": "server_form.main_screen_content",
+      button_mappings: [{ from_button_id: "button.menu_cancel", to_button_id: "button.menu_exit", mapping_type: "global" }] };
+    out["main_screen_content"] = { type: "panel", size: ["100%", "100%"], controls: [
+      { server_form_factory: { type: "factory", control_ids: { long_form: "@server_form.switching_long_form", custom_form: "@server_form.custom_form" } } } ] };
+    const sw = { type: "panel", size: ["100%", "100%"] };
+    forms.forEach(f => { sw["$flag_" + slug(f.id)] = f.flag; });
+    const allAbsent = forms.length ? "(" + forms.map(f => `((#title_text - $flag_${slug(f.id)}) = #title_text)`).join(" and ") + ")" : null;
+    const sc = [];
+    const vanilla = { enabled: false, visible: false, bindings: [{ binding_type: "global", binding_condition: "none", binding_name: "#title_text", binding_name_override: "#title_text" }] };
+    if (allAbsent) { vanilla.bindings.push({ source_property_name: allAbsent, binding_type: "view", target_property_name: "#visible" }, { source_property_name: allAbsent, binding_type: "view", target_property_name: "#enabled" }); }
+    sc.push({ "vanilla@long_form": vanilla });
+    forms.forEach(f => { const present = `(not ((#title_text - $flag_${slug(f.id)}) = #title_text))`;
+      sc.push({ [`${slug(f.id)}@${nsOf(f)}.main_panel`]: { enabled: false, visible: false, bindings: [
+        { binding_type: "global", binding_condition: "none", binding_name: "#title_text", binding_name_override: "#title_text" },
+        { source_property_name: present, binding_type: "view", target_property_name: "#visible" },
+        { source_property_name: present, binding_type: "view", target_property_name: "#enabled" } ] } }); });
+    sw.controls = sc; out["switching_long_form"] = sw;
+    return out;
+  }
+  const buildUiDefs = () => ({ ui_defs: forms.map(f => "ui/forms/" + fileName(f)) });
+
+  function buildScript() {
+    let s = 'import { ActionFormData } from "@minecraft/server-ui";\n\n';
+    s += '// Flag invisible que activa cada UI (va en el TÍTULO).\nconst FLAG = {\n';
+    forms.forEach(f => { s += `  ${slug(f.id)}: "\\u00a7m\\u00a7${f.flag.slice(-1)}", // ${f.name} -> ${fileName(f)}\n`; });
+    s += '};\n\n';
+    forms.forEach(f => {
+      const id = slug(f.id), bf = buttonFlags(f);
+      s += `// Abrir "${f.name}"\nexport async function open_${id}(player) {\n  const form = new ActionFormData()\n`;
+      s += `    .title(${JSON.stringify(f.pvTitle || f.name)} + FLAG.${id})`;
+      if (f.pvBody) s += `\n    .body(${JSON.stringify(f.pvBody)})`;
+      f.buttons.forEach((b, i) => {
+        const fl = bf[i];
+        let t = JSON.stringify(b.text);
+        if (fl.needs) t += ` + "\\u00a7m\\u00a7${fl.glyphChar}"`;
+        s += `\n    .button(${t}${b.icon ? `, ${JSON.stringify(b.icon)}` : ""})`;
+      });
+      s += `;\n\n  const r = await form.show(player);\n  if (r.canceled) return;\n  // r.selection -> índice del botón\n}\n\n`;
+    });
+    return s;
+  }
+
+  /* ---- historial (deshacer / rehacer) ---- */
+  let history = [], hi = -1, restoring = false;
+  function snapshot() { if (restoring) return; const s = JSON.stringify({ forms, active, uid });
+    if (history[hi] === s) return; history = history.slice(0, hi + 1); history.push(s); hi = history.length - 1;
+    if (history.length > 120) { history.shift(); hi--; } }
+  function loadHist() { try { const d = JSON.parse(history[hi]); restoring = true; forms = d.forms; active = d.active; uid = d.uid; restoring = false; render(); } catch (e) { restoring = false; } }
+  function undo() { if (hi > 0) { hi--; loadHist(); } }
+  function redo() { if (hi < history.length - 1) { hi++; loadHist(); } }
+
+  function refresh() {
+    const f = getActive();
+    el("outServer").textContent = JSON.stringify(buildServerForm(), null, 2);
+    el("outDefs").textContent = JSON.stringify(buildUiDefs(), null, 2);
+    el("outJs").textContent = buildScript();
+    el("panelName").textContent = f ? fileName(f) : "(sin UI)";
+    el("outPanel").textContent = f ? JSON.stringify(buildFormFile(f), null, 2) : "";
+    drawPreview();
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(forms)); } catch (e) {}
+    snapshot();
+  }
+
+  /* ---- preview ---- */
+  const anchorPct = a => [a.includes("left") ? 0 : a.includes("right") ? 1 : 0.5, a.includes("top") ? 0 : a.includes("bottom") ? 1 : 0.5];
+  function placeStyle(d, e) { const [ax, ay] = anchorPct(e.anchor_to), [fx, fy] = anchorPct(e.anchor_from);
+    d.style.position = "absolute"; d.style.left = (ax * 100) + "%"; d.style.top = (ay * 100) + "%";
+    d.style.transform = `translate(calc(-${fx * 100}% + ${num(e.ox, 0)}px), calc(-${fy * 100}% + ${num(e.oy, 0)}px))`; d.style.zIndex = String(num(e.layer, 0)); }
+  function drawPreview() {
+    const stage = el("stage"); stage.innerHTML = "";
+    const box = document.createElement("div"); box.id = "formBox"; stage.appendChild(box);
+    const f = getActive(); if (!f) return;
+    if (f.bgOn !== false) box.style.background = `linear-gradient(160deg, ${cssOf(f.bgColor)}, ${cssOf(f.bgColor2)})`;
+    if (f.closeOn !== false) { const x = document.createElement("div"); x.textContent = "✕";
+      x.style.cssText = "position:absolute;top:3px;right:5px;z-index:30;color:#fff;font-weight:700;font-size:13px;"; box.appendChild(x); }
+    f.elements.forEach(e => {
+      const d = document.createElement("div");
+      if (e.type === "image") { d.className = "ov ov-img" + (e._src ? " has-src" : "");
+        if (e.fill) { d.style.position = "absolute"; d.style.inset = "0"; d.style.zIndex = String(num(e.layer, 0)); } else { placeStyle(d, e); d.style.width = num(e.w, 100) + "px"; d.style.height = num(e.h, 40) + "px"; }
+        d.style.opacity = String(num(e.alpha, 1));
+        if (e._src) { d.style.backgroundImage = `url(${e._src})`; if (e.tint) { d.style.backgroundColor = cssOf(e.color); d.style.backgroundBlendMode = "multiply"; } }
+        else { d.textContent = e.texture; if (e.tint) { d.style.background = cssOf(e.color); d.style.color = "#000"; } } }
+      else if (e.type === "gradient") { d.className = "ov";
+        if (e.fill) { d.style.position = "absolute"; d.style.inset = "0"; d.style.zIndex = String(num(e.layer, 0)); } else { placeStyle(d, e); d.style.width = num(e.w, 100) + "px"; d.style.height = num(e.h, 40) + "px"; }
+        d.style.background = `linear-gradient(${cssOf(e.color1)}, ${cssOf(e.color2)})`; d.style.opacity = String(num(e.alpha, 1)); }
+      else if (e.type === "label") { d.className = "ov ov-label"; placeStyle(d, e); d.style.color = cssOf(e.color);
+        d.style.fontSize = (12 * num(e.scale, 1)) + "px"; d.style.textAlign = e.align; if (!e.shadow) d.style.textShadow = "none"; d.textContent = clean(e.text); }
+      else if (e.type === "scroll") { d.className = "ov ov-scroll"; placeStyle(d, e); d.style.width = num(e.w, 200) + "px"; d.style.height = num(e.h, 80) + "px";
+        d.style.color = cssOf(e.color); d.textContent = String(e.text).trim() === "#form_text" ? clean(f.pvBody) : clean(e.text); }
+      d.dataset.elid = e.id; if (!e.fill) d.classList.add("drag");
+      box.appendChild(d);
+    });
+    if (f.titleOn) { const t = document.createElement("div"); t.className = "pv-title ov drag"; t.dataset.block = "title"; t.style.left = "50%"; t.style.top = "0"; t.style.width = "94%";
+      t.style.transform = `translate(-50%, ${num(f.titleOffsetY, 10)}px)`; t.style.fontSize = (11 * num(f.titleScale, 1.5)) + "px"; t.style.textAlign = f.titleAlign; t.style.color = cssOf(f.titleColor); t.style.zIndex = "6";
+      t.textContent = clean(f.pvTitle) || "TÍTULO"; box.appendChild(t); }
+    if (f.descOn) { const d = document.createElement("div"); d.className = "ov drag"; d.dataset.block = "desc"; d.style.left = "50%"; d.style.top = "0"; d.style.width = "80%";
+      d.style.transform = `translate(-50%, ${num(f.descOffsetY, 38)}px)`; d.style.fontSize = "11px"; d.style.textAlign = f.descAlign; d.style.color = cssOf(f.descColor); d.style.textShadow = "1px 1px 0 #000"; d.style.zIndex = "6";
+      d.textContent = clean(f.pvBody); box.appendChild(d); }
+    if (f.btnOn) { const w = document.createElement("div"); w.className = "ov drag"; w.dataset.block = "buttons"; w.style.left = "50%"; w.style.top = "0"; w.style.width = num(f.btnWidth, 200) + "px";
+      w.style.transform = `translate(-50%, ${num(f.btnOffsetY, 78)}px)`; w.style.zIndex = "5";
+      f.buttons.forEach(b => { const x = document.createElement("div"); x.className = "pv-btn"; x.style.background = cssOf(b.color); x.style.minHeight = num(f.btnHeight, 26) + "px";
+        if (b._src) { const i = document.createElement("img"); i.src = b._src; x.appendChild(i); } const s = document.createElement("span"); s.textContent = clean(b.text); x.appendChild(s); w.appendChild(x); });
+      box.appendChild(w); }
+  }
+
+  /* ---- proyecto (guardar / cargar / importar) ---- */
+  function dlText(text, name, mime) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+    a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href); }
+  function saveProject() { dlText(JSON.stringify({ tool: "customforms-ia", version: 6, forms }, null, 2), "custom_forms_project.json", "application/json"); }
+  function loadProject(input) { const file = input.files && input.files[0]; if (!file) return;
+    const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result);
+      const arr = Array.isArray(d) ? d : d.forms; if (!Array.isArray(arr) || !arr.length) { alert("Archivo de proyecto no válido."); return; }
+      forms = arr; uid = 0; nextUid(); active = forms[0].uid; reflag(); render(); } catch (e) { alert("No se pudo leer el proyecto: " + e.message); } };
+    r.readAsText(file); input.value = ""; }
+  function importServer(input) { const file = input.files && input.files[0]; if (!file) return;
+    const r = new FileReader(); r.onload = () => { try { const d = JSON.parse(r.result);
+      const sw = d["switching_long_form"]; if (!sw || !sw.controls) { alert("No parece un server_form.json generado aquí."); return; }
+      const rebuilt = [];
+      sw.controls.forEach(ctrl => { const key = Object.keys(ctrl)[0]; const m = /^(\w+)@(\w+)\.main_panel$/.exec(key); if (!m) return;
+        const id = m[1]; const flag = sw["$flag_" + id] || FLAG_POOL[rebuilt.length] || FLAG_POOL[0];
+        const f = defaultForm(); f.uid = nextUid(); f.id = id; f.name = pascal(id); f.flag = flag; f.buttons = []; f.elements = [];
+        rebuilt.push(f); });
+      if (!rebuilt.length) { alert("No se encontraron UIs en el archivo."); return; }
+      forms = rebuilt; active = forms[0].uid; reflag(); render();
+      alert("Importadas " + rebuilt.length + " UIs (nombres y flags). El contenido visual no es reversible: vuelve a añadir botones/elementos.");
+    } catch (e) { alert("No se pudo importar: " + e.message); } };
+    r.readAsText(file); input.value = ""; }
+
+  /* ---- ZIP (store, sin dependencias) ---- */
+  const CRC = (() => { let t = []; for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  const u16 = n => [n & 255, (n >> 8) & 255], u32 = n => [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >> 24) & 255];
+  function makeZip(files) { const enc = new TextEncoder(); const parts = [], central = []; let offset = 0;
+    files.forEach(f => { const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+      const local = [].concat(u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0));
+      parts.push(new Uint8Array(local), name, data);
+      const cen = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(data.length), u32(data.length), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset));
+      central.push(new Uint8Array(cen), name); offset += local.length + name.length + data.length; });
+    let cSize = 0; central.forEach(c => cSize += c.length);
+    const end = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(cSize), u32(offset), u16(0)));
+    return new Blob([...parts, ...central, end], { type: "application/zip" }); }
+  // Sidecars de nine-slice (<textura>.json) para imágenes que lo pidan, como las de Hive.
+  function collectSidecars() {
+    const map = {};
+    forms.forEach(f => f.elements.forEach(e => {
+      if (e.type === "image" && e.nineslice && e.sidecar) {
+        const tex = (e.texture || "").trim(); if (!tex) return;
+        const n = num(e.nsl, 4);
+        map[tex + ".json"] = JSON.stringify({ nineslice_size: [n, n, n, n], base_size: [num(e.bw, 16), num(e.bh, 16)] });
+      }
+    }));
+    return Object.keys(map).map(k => ({ name: k, text: map[k] }));
+  }
+  function downloadZip() {
+    const files = [ { name: "ui/_ui_defs.json", text: JSON.stringify(buildUiDefs(), null, 2) },
+      { name: "ui/server_form.json", text: JSON.stringify(buildServerForm(), null, 2) }, { name: "scripts/forms.js", text: buildScript() } ];
+    forms.forEach(f => files.push({ name: "ui/forms/" + fileName(f), text: JSON.stringify(buildFormFile(f), null, 2) }));
+    collectSidecars().forEach(s => files.push(s));
+    const a = document.createElement("a"); a.href = URL.createObjectURL(makeZip(files));
+    a.download = "custom_forms_ui.zip"; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href); }
+  function cp(id) { const t = el(id).textContent; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).catch(() => {}); }
+
+  /* ---- eventos por delegación ---- */
+  document.addEventListener("click", e => {
+    const b = e.target && e.target.closest ? e.target.closest("[data-act]") : null; if (!b) return;
+    const a = b.dataset.act;
+    if (a === "addForm") addForm(); else if (a === "removeForm") removeForm();
+    else if (a === "selectForm") { active = Number(b.dataset.arg); render(); }
+    else if (a === "addBtn") addBtn(); else if (a === "removeBtn") removeBtn(Number(b.dataset.arg2));
+    else if (a === "addEl") addEl(b.dataset.arg); else if (a === "removeEl") removeEl(Number(b.dataset.arg2));
+    else if (a === "zip") downloadZip(); else if (a === "cp") cp(b.dataset.arg);
+    else if (a === "saveProject") saveProject();
+    else if (a === "undo") undo(); else if (a === "redo") redo();
+  });
+  function onField(t) {
+    const val = t.type === "checkbox" ? t.checked : (t.dataset.type === "number" ? Number(t.value) : t.value);
+    if (t.dataset.f != null) setF(t.dataset.f, val);
+    else if (t.dataset.bt != null) updBtn(Number(t.dataset.bt), t.dataset.key, val);
+    else if (t.dataset.elid != null) updEl(Number(t.dataset.elid), t.dataset.key, val);
+  }
+  document.addEventListener("input", e => { if (e.target && e.target.matches && e.target.matches("[data-f],[data-bt],[data-elid]")) onField(e.target); });
+  document.addEventListener("change", e => { const t = e.target; if (!t || !t.dataset) return;
+    if (t.dataset.act === "loadBtnIcon") return loadBtnIcon(Number(t.dataset.bt), t);
+    if (t.dataset.act === "loadElImg") return loadElImg(Number(t.dataset.elid), t);
+    if (t.dataset.act === "loadProject") return loadProject(t);
+    if (t.dataset.act === "importServer") return importServer(t);
+    if (t.matches && t.matches("[data-f],[data-bt],[data-elid]")) onField(t); });
+
+  // arrastrar elementos / bloques en el lienzo para fijar su posición
+  (function attachDrag() {
+    const stage = el("stage"); if (!stage) return;
+    let drag = null;
+    stage.addEventListener("pointerdown", e => {
+      const t = e.target && e.target.closest ? e.target.closest(".drag") : null; if (!t) return;
+      const f = getActive(); if (!f) return;
+      if (t.dataset.elid != null) {
+        const ex = f.elements.find(x => x.id === Number(t.dataset.elid)); if (!ex) return;
+        drag = { node: t, el: ex, sx: e.clientX, sy: e.clientY, ox: num(ex.ox, 0), oy: num(ex.oy, 0) };
+      } else if (t.dataset.block) {
+        drag = { node: t, block: t.dataset.block, sx: e.clientX, sy: e.clientY, oy: num(f[t.dataset.block + "OffsetY"], 0) };
+      } else return;
+      e.preventDefault(); try { t.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    stage.addEventListener("pointermove", e => {
+      if (!drag) return; const f = getActive(); if (!f) return;
+      const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+      if (drag.el) {
+        drag.el.ox = Math.round(drag.ox + dx); drag.el.oy = Math.round(drag.oy + dy);
+        const [fx, fy] = anchorPct(drag.el.anchor_from);
+        drag.node.style.transform = `translate(calc(-${fx * 100}% + ${drag.el.ox}px), calc(-${fy * 100}% + ${drag.el.oy}px))`;
+      } else {
+        const v = Math.round(drag.oy + dy); f[drag.block + "OffsetY"] = v;
+        drag.node.style.transform = `translate(-50%, ${v}px)`;
+      }
+    });
+    const end = () => { if (drag) { drag = null; render(); } };
+    stage.addEventListener("pointerup", end);
+    stage.addEventListener("pointercancel", end);
+  })();
+
+  // init: restaurar de localStorage o crear una UI
+  try { const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+    if (Array.isArray(saved) && saved.length) { forms = saved; nextUid(); active = forms[0].uid; } } catch (e) {}
+  if (!forms.length) addForm(); else { reflag(); render(); }
+  const verEl = el("ver"); if (verEl) verEl.textContent = "build 12 · JS OK";
+})();
+</script>
+</body>
+</html>
